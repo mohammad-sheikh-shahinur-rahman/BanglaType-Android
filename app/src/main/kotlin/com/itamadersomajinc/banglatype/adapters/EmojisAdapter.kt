@@ -6,8 +6,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.emoji2.text.EmojiCompat
 import androidx.recyclerview.widget.RecyclerView
-import org.fossify.commons.extensions.adjustAlpha
-import org.fossify.commons.extensions.getProperTextColor
+import com.itamadersomajinc.banglatype.commons.extensions.adjustAlpha
+import com.itamadersomajinc.banglatype.commons.extensions.getProperTextColor
 import com.itamadersomajinc.banglatype.databinding.ItemEmojiBinding
 import com.itamadersomajinc.banglatype.databinding.ItemEmojiCategoryTitleBinding
 import com.itamadersomajinc.banglatype.helpers.EmojiData

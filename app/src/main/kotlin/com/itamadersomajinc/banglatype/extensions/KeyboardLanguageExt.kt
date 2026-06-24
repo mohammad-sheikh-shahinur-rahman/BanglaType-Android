@@ -2,7 +2,7 @@ package com.itamadersomajinc.banglatype.extensions
 
 import android.annotation.SuppressLint
 import android.content.Context
-import org.fossify.commons.models.RadioItem
+import com.itamadersomajinc.banglatype.commons.models.RadioItem
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_ARABIC
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BELARUSIAN_CYRL

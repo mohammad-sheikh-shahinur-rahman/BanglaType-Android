@@ -1,0 +1,8 @@
+com.itamadersomajinc.banglatype.commons-updated_navigation_xml-0 C:\Users\shahi\Downloads\Compressed\Keyboard\commons\build\generated\updated_navigation_xml\debug
+com.itamadersomajinc.banglatype.commons-mergeDebugResources-1 C:\Users\shahi\Downloads\Compressed\Keyboard\commons\build\intermediates\incremental\debug\mergeDebugResources\merged.dir
+com.itamadersomajinc.banglatype.commons-mergeDebugResources-2 C:\Users\shahi\Downloads\Compressed\Keyboard\commons\build\intermediates\incremental\debug\mergeDebugResources\stripped.dir
+com.itamadersomajinc.banglatype.commons-debug-3 C:\Users\shahi\Downloads\Compressed\Keyboard\commons\build\intermediates\merged_res\debug\mergeDebugResources
+com.itamadersomajinc.banglatype.commons-debug-4 C:\Users\shahi\Downloads\Compressed\Keyboard\commons\build\intermediates\packaged_res\debug\packageDebugResources
+com.itamadersomajinc.banglatype.commons-debug-5 C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\debug\res
+com.itamadersomajinc.banglatype.commons-main-6 C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\res
+gradleHome-0 C:\Users\shahi\.gradle

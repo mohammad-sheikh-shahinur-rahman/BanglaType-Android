@@ -142,7 +142,7 @@ detekt {
 }
 
 dependencies {
-    implementation(libs.fossify.commons)
+    implementation(project(":commons"))
     implementation(libs.androidx.emoji2.bundled)
     implementation(libs.androidx.autofill)
 

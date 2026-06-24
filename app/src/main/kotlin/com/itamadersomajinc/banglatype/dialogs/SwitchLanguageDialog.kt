@@ -8,9 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioGroup
 import androidx.appcompat.app.AlertDialog
-import org.fossify.commons.databinding.DialogRadioGroupBinding
-import org.fossify.commons.databinding.RadioButtonBinding
-import org.fossify.commons.extensions.onGlobalLayout
+import com.itamadersomajinc.banglatype.commons.databinding.DialogRadioGroupBinding
+import com.itamadersomajinc.banglatype.commons.databinding.RadioButtonBinding
+import com.itamadersomajinc.banglatype.commons.extensions.onGlobalLayout
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.activities.SettingsActivity
 import com.itamadersomajinc.banglatype.extensions.*

@@ -1,8 +1,8 @@
 package com.itamadersomajinc.banglatype.dialogs
 
-import org.fossify.commons.activities.BaseSimpleActivity
-import org.fossify.commons.extensions.getAlertDialogBuilder
-import org.fossify.commons.extensions.setupDialogStuff
+import com.itamadersomajinc.banglatype.commons.activities.BaseSimpleActivity
+import com.itamadersomajinc.banglatype.commons.extensions.getAlertDialogBuilder
+import com.itamadersomajinc.banglatype.commons.extensions.setupDialogStuff
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.adapters.ManageKeyboardLanguagesAdapter
 import com.itamadersomajinc.banglatype.databinding.DialogManageKeyboardLanguagesBinding

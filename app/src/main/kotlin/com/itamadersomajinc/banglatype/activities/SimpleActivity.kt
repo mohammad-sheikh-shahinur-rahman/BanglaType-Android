@@ -1,7 +1,7 @@
 package com.itamadersomajinc.banglatype.activities
 
-import org.fossify.commons.activities.BaseSimpleActivity
-import org.fossify.commons.helpers.SIDELOADING_FALSE
+import com.itamadersomajinc.banglatype.commons.activities.BaseSimpleActivity
+import com.itamadersomajinc.banglatype.commons.helpers.SIDELOADING_FALSE
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.extensions.config
 

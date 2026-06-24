@@ -1,7 +1,7 @@
 package com.itamadersomajinc.banglatype.helpers
 
 import android.content.Context
-import org.fossify.commons.helpers.BaseConfig
+import com.itamadersomajinc.banglatype.commons.helpers.BaseConfig
 import com.itamadersomajinc.banglatype.extensions.isDeviceLocked
 import com.itamadersomajinc.banglatype.extensions.safeStorageContext
 import java.util.Locale

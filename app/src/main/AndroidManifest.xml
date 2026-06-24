@@ -70,7 +70,7 @@
         </activity>
 
         <activity
-            android:name="org.fossify.commons.activities.CustomizationActivity"
+            android:name="com.itamadersomajinc.banglatype.commons.activities.CustomizationActivity"
             android:configChanges="orientation"
             android:label="@string/customize_colors"
             android:parentActivityName=".activities.SettingsActivity" />

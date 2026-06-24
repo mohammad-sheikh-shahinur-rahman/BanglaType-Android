@@ -1,0 +1,140 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    xmlns:tools="http://schemas.android.com/tools"
+4    package="com.itamadersomajinc.banglatype.commons" >
+5
+6    <uses-sdk android:minSdkVersion="26" />
+6-->INJECTED
+6-->INJECTED
+7
+8    <queries>
+8-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:5:5-8:15
+9        <package android:name="com.itamadersomajinc.banglatype.thankyou.debug" />
+9-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:6:9-82
+9-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:6:18-79
+10        <package android:name="com.itamadersomajinc.banglatype.thankyou" />
+10-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:7:9-76
+10-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:7:18-73
+11    </queries>
+12
+13    <uses-feature
+13-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:10:5-12:36
+14        android:name="android.hardware.faketouch"
+14-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:11:9-50
+15        android:required="false" />
+15-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:12:9-33
+16    <uses-feature
+16-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:14:5-16:36
+17        android:name="android.hardware.screen.portrait"
+17-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:15:9-56
+18        android:required="false" />
+18-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:16:9-33
+19
+20    <uses-permission
+20-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:18:5-20:31
+21        android:name="android.permission.USE_BIOMETRIC"
+21-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:19:9-56
+22        tools:node="remove" />
+22-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:20:9-28
+23    <uses-permission
+23-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:22:5-24:31
+24        android:name="${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+24-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:23:9-81
+25        tools:node="remove" />
+25-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:24:9-28
+26
+27    <!-- used by Reprint -->
+28    <uses-permission
+28-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:27:5-29:31
+29        android:name="com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY"
+29-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:28:9-101
+30        tools:node="remove" />
+30-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:29:9-28
+31    <uses-permission android:name="com.itamadersomajinc.banglatype.android.permission.WRITE_GLOBAL_SETTINGS" />
+31-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:31:5-112
+31-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:31:22-109
+32
+33    <application android:supportsRtl="true" >
+33-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:33:5-79:19
+33-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:33:18-44
+34        <activity
+34-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:34:9-39:109
+35            android:name="com.itamadersomajinc.banglatype.commons.activities.ContributorsActivity"
+35-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:35:13-99
+36            android:configChanges="orientation"
+36-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:36:13-48
+37            android:exported="false"
+37-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:37:13-37
+38            android:label="@string/contributors"
+38-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:38:13-49
+39            android:parentActivityName="com.itamadersomajinc.banglatype.commons.activities.AboutActivity" />
+39-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:39:13-106
+40        <activity
+40-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:41:9-46:109
+41            android:name="com.itamadersomajinc.banglatype.commons.activities.FAQActivity"
+41-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:42:13-90
+42            android:configChanges="orientation"
+42-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:43:13-48
+43            android:exported="false"
+43-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:44:13-37
+44            android:label="@string/frequently_asked_questions"
+44-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:45:13-63
+45            android:parentActivityName="com.itamadersomajinc.banglatype.commons.activities.AboutActivity" />
+45-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:46:13-106
+46        <activity
+46-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:48:9-53:109
+47            android:name="com.itamadersomajinc.banglatype.commons.activities.LicenseActivity"
+47-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:49:13-94
+48            android:configChanges="orientation"
+48-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:50:13-48
+49            android:exported="false"
+49-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:51:13-37
+50            android:label="@string/third_party_licences"
+50-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:52:13-57
+51            android:parentActivityName="com.itamadersomajinc.banglatype.commons.activities.AboutActivity" />
+51-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:53:13-106
+52        <activity
+52-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:55:9-60:62
+53            android:name="com.itamadersomajinc.banglatype.commons.activities.ManageBlockedNumbersActivity"
+53-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:56:13-68
+54            android:configChanges="orientation"
+54-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:57:13-48
+55            android:enableOnBackInvokedCallback="true"
+55-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:58:13-55
+56            android:exported="false"
+56-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:59:13-37
+57            android:label="@string/manage_blocked_numbers" />
+57-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:60:13-59
+58        <activity
+58-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:62:9-65:57
+59            android:name="com.itamadersomajinc.banglatype.commons.activities.DonationActivity"
+59-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:63:13-56
+60            android:exported="false"
+60-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:64:13-37
+61            android:label="@string/donate_to_fossify" />
+61-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:65:13-54
+62        <activity
+62-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:67:9-69:40
+63            android:name="com.itamadersomajinc.banglatype.commons.activities.AppLockActivity"
+63-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:68:13-55
+64            android:exported="false" />
+64-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:69:13-37
+65
+66        <receiver
+66-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:71:9-78:20
+67            android:name="com.itamadersomajinc.banglatype.commons.receivers.FossifyBroadcastReceiver"
+67-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:72:13-63
+68            android:exported="true"
+68-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:73:13-36
+69            tools:ignore="ExportedReceiver" >
+69-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:74:13-44
+70            <intent-filter>
+70-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:75:13-77:29
+71                <action android:name="com.itamadersomajinc.banglatype.android.GLOBAL_CONFIG_UPDATED" />
+71-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:76:17-104
+71-->C:\Users\shahi\Downloads\Compressed\Keyboard\commons\src\main\AndroidManifest.xml:76:25-101
+72            </intent-filter>
+73        </receiver>
+74    </application>
+75
+76</manifest>

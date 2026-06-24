@@ -10,7 +10,7 @@
         android:id="@+id/keyboard_language_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layoutManager="org.fossify.commons.views.MyLinearLayoutManager"
+        app:layoutManager="com.itamadersomajinc.banglatype.commons.views.MyLinearLayoutManager"
         tools:listitem="@layout/language_checkbox_item" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

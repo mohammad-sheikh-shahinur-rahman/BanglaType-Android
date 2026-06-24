@@ -8,9 +8,9 @@ import android.widget.HorizontalScrollView
 import android.widget.inline.InlineContentView
 import androidx.annotation.AttrRes
 import androidx.core.view.allViews
-import org.fossify.commons.extensions.beInvisible
-import org.fossify.commons.extensions.beVisible
-import org.fossify.commons.helpers.isRPlus
+import com.itamadersomajinc.banglatype.commons.extensions.beInvisible
+import com.itamadersomajinc.banglatype.commons.extensions.beVisible
+import com.itamadersomajinc.banglatype.commons.helpers.isRPlus
 
 /**
  * [HorizontalScrollView] adapted for holding [InlineContentView] instances

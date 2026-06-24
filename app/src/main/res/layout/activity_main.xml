@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <org.fossify.commons.views.MyAppBarLayout
+    <com.itamadersomajinc.banglatype.commons.views.MyAppBarLayout
         android:id="@+id/main_appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -18,7 +18,7 @@
             app:menu="@menu/menu_main"
             app:titleTextAppearance="@style/AppTheme.ActionBar.TitleTextStyle" />
 
-    </org.fossify.commons.views.MyAppBarLayout>
+    </com.itamadersomajinc.banglatype.commons.views.MyAppBarLayout>
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/main_nested_scrollview"
@@ -49,7 +49,7 @@
                     android:src="@mipmap/ic_launcher"
                     android:contentDescription="@string/app_launcher_name" />
 
-                <org.fossify.commons.views.MyTextView
+                <com.itamadersomajinc.banglatype.commons.views.MyTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -57,7 +57,7 @@
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
-                <org.fossify.commons.views.MyTextView
+                <com.itamadersomajinc.banglatype.commons.views.MyTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/fast_secure_open_source"
@@ -97,7 +97,7 @@
                             app:tint="@color/color_primary"
                             android:contentDescription="@string/change_keyboard" />
 
-                        <org.fossify.commons.views.MyTextView
+                        <com.itamadersomajinc.banglatype.commons.views.MyTextView
                             android:id="@+id/change_keyboard"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -139,7 +139,7 @@
                             android:src="@drawable/ic_language_outlined"
                             android:contentDescription="@string/layout_and_appearance" />
 
-                        <org.fossify.commons.views.MyTextView
+                        <com.itamadersomajinc.banglatype.commons.views.MyTextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="16dp"
@@ -151,7 +151,7 @@
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Keyboard Test Section -->
-            <org.fossify.commons.views.MyTextView
+            <com.itamadersomajinc.banglatype.commons.views.MyTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="24dp"
@@ -177,14 +177,14 @@
                     android:orientation="vertical"
                     android:padding="12dp">
 
-                    <org.fossify.commons.views.MyEditText
+                    <com.itamadersomajinc.banglatype.commons.views.MyEditText
                         android:id="@+id/text_edittext"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/type_something"
                         android:inputType="textCapSentences" />
 
-                    <org.fossify.commons.views.MyEditText
+                    <com.itamadersomajinc.banglatype.commons.views.MyEditText
                         android:id="@+id/text_editemail"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -192,7 +192,7 @@
                         android:hint="@string/email_address"
                         android:inputType="textEmailAddress" />
 
-                    <org.fossify.commons.views.MyEditText
+                    <com.itamadersomajinc.banglatype.commons.views.MyEditText
                         android:id="@+id/text_editpassword"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -219,21 +219,21 @@
                     android:orientation="vertical"
                     android:padding="20dp">
 
-                    <org.fossify.commons.views.MyTextView
+                    <com.itamadersomajinc.banglatype.commons.views.MyTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/about_developer"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
-                    <org.fossify.commons.views.MyTextView
+                    <com.itamadersomajinc.banglatype.commons.views.MyTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="@string/about_developer_name"
                         android:textSize="16sp" />
 
-                    <org.fossify.commons.views.MyTextView
+                    <com.itamadersomajinc.banglatype.commons.views.MyTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
@@ -241,7 +241,7 @@
                         android:textSize="14sp"
                         android:alpha="0.7" />
 
-                    <org.fossify.commons.views.MyTextView
+                    <com.itamadersomajinc.banglatype.commons.views.MyTextView
                         android:id="@+id/facebook_link"
                         style="@style/ColoredButtonStyle"
                         android:layout_width="match_parent"

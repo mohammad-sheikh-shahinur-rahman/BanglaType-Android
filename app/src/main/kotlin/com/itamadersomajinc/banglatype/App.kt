@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.emoji2.bundled.BundledEmojiCompatConfig
 import androidx.emoji2.text.EmojiCompat
 import com.itamadersomajinc.banglatype.helpers.Config
-import org.fossify.commons.helpers.SIDELOADING_FALSE
+import com.itamadersomajinc.banglatype.commons.helpers.SIDELOADING_FALSE
 
 class App : Application() {
     override fun onCreate() {

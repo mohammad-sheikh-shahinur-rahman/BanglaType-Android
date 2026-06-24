@@ -1,10 +1,10 @@
 package com.itamadersomajinc.banglatype.dialogs
 
 import androidx.appcompat.app.AlertDialog
-import org.fossify.commons.activities.BaseSimpleActivity
-import org.fossify.commons.dialogs.ConfirmationDialog
-import org.fossify.commons.dialogs.FilePickerDialog
-import org.fossify.commons.extensions.*
+import com.itamadersomajinc.banglatype.commons.activities.BaseSimpleActivity
+import com.itamadersomajinc.banglatype.commons.dialogs.ConfirmationDialog
+import com.itamadersomajinc.banglatype.commons.dialogs.FilePickerDialog
+import com.itamadersomajinc.banglatype.commons.extensions.*
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.databinding.DialogExportClipsBinding
 import com.itamadersomajinc.banglatype.extensions.config

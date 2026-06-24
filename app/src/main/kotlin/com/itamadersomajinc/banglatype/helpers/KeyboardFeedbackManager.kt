@@ -4,8 +4,8 @@ import android.content.Context
 import android.media.AudioManager
 import android.view.HapticFeedbackConstants
 import android.view.View
-import org.fossify.commons.extensions.performHapticFeedback
-import org.fossify.commons.helpers.isOreoMr1Plus
+import com.itamadersomajinc.banglatype.commons.extensions.performHapticFeedback
+import com.itamadersomajinc.banglatype.commons.helpers.isOreoMr1Plus
 import com.itamadersomajinc.banglatype.extensions.config
 import com.itamadersomajinc.banglatype.extensions.safeStorageContext
 

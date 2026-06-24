@@ -1,12 +1,12 @@
 package com.itamadersomajinc.banglatype.dialogs
 
 import androidx.appcompat.app.AlertDialog
-import org.fossify.commons.activities.BaseSimpleActivity
-import org.fossify.commons.extensions.getAlertDialogBuilder
-import org.fossify.commons.extensions.setupDialogStuff
-import org.fossify.commons.extensions.showKeyboard
-import org.fossify.commons.extensions.toast
-import org.fossify.commons.helpers.ensureBackgroundThread
+import com.itamadersomajinc.banglatype.commons.activities.BaseSimpleActivity
+import com.itamadersomajinc.banglatype.commons.extensions.getAlertDialogBuilder
+import com.itamadersomajinc.banglatype.commons.extensions.setupDialogStuff
+import com.itamadersomajinc.banglatype.commons.extensions.showKeyboard
+import com.itamadersomajinc.banglatype.commons.extensions.toast
+import com.itamadersomajinc.banglatype.commons.helpers.ensureBackgroundThread
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.databinding.DialogAddOrEditClipBinding
 import com.itamadersomajinc.banglatype.helpers.ClipsHelper

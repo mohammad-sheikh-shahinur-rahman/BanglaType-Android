@@ -13,7 +13,7 @@
         android:clickable="false"
         android:focusable="false">
 
-        <org.fossify.commons.views.MyAppCompatCheckbox
+        <com.itamadersomajinc.banglatype.commons.views.MyAppCompatCheckbox
             android:id="@+id/language_checkbox"
             style="@style/SettingsCheckboxStyle"
             android:layout_width="match_parent"

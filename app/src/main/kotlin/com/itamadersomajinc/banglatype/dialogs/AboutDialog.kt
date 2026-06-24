@@ -2,10 +2,10 @@ package com.itamadersomajinc.banglatype.dialogs
 
 import android.content.Intent
 import android.net.Uri
-import org.fossify.commons.activities.BaseSimpleActivity
-import org.fossify.commons.extensions.getAlertDialogBuilder
-import org.fossify.commons.extensions.launchViewIntent
-import org.fossify.commons.extensions.setupDialogStuff
+import com.itamadersomajinc.banglatype.commons.activities.BaseSimpleActivity
+import com.itamadersomajinc.banglatype.commons.extensions.getAlertDialogBuilder
+import com.itamadersomajinc.banglatype.commons.extensions.launchViewIntent
+import com.itamadersomajinc.banglatype.commons.extensions.setupDialogStuff
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.databinding.DialogAboutBinding
 

@@ -2,11 +2,11 @@ package com.itamadersomajinc.banglatype.extensions
 
 import android.content.Context
 import android.graphics.Color
-import org.fossify.commons.extensions.darkenColor
-import org.fossify.commons.extensions.getProperBackgroundColor
-import org.fossify.commons.extensions.isDynamicTheme
-import org.fossify.commons.extensions.isSystemInDarkMode
-import org.fossify.commons.extensions.lightenColor
+import com.itamadersomajinc.banglatype.commons.extensions.darkenColor
+import com.itamadersomajinc.banglatype.commons.extensions.getProperBackgroundColor
+import com.itamadersomajinc.banglatype.commons.extensions.isDynamicTheme
+import com.itamadersomajinc.banglatype.commons.extensions.isSystemInDarkMode
+import com.itamadersomajinc.banglatype.commons.extensions.lightenColor
 import com.itamadersomajinc.banglatype.R
 
 fun Context.getKeyboardBackgroundColor(): Int {

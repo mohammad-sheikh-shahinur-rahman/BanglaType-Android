@@ -9,8 +9,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import org.fossify.commons.extensions.*
-import org.fossify.commons.helpers.ensureBackgroundThread
+import com.itamadersomajinc.banglatype.commons.extensions.*
+import com.itamadersomajinc.banglatype.commons.helpers.ensureBackgroundThread
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.databinding.ItemClipOnKeyboardBinding
 import com.itamadersomajinc.banglatype.databinding.ItemSectionLabelBinding

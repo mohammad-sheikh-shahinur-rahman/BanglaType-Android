@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import org.fossify.commons.views.MyAppCompatCheckbox
+import com.itamadersomajinc.banglatype.commons.views.MyAppCompatCheckbox
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.helpers.Config
 

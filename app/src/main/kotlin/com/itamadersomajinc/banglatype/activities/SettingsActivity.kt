@@ -2,15 +2,15 @@ package com.itamadersomajinc.banglatype.activities
 
 import android.content.Intent
 import android.os.Bundle
-import org.fossify.commons.dialogs.RadioGroupDialog
-import org.fossify.commons.extensions.beVisibleIf
-import org.fossify.commons.extensions.getProperPrimaryColor
-import org.fossify.commons.extensions.toast
-import org.fossify.commons.extensions.updateTextColors
-import org.fossify.commons.extensions.viewBinding
-import org.fossify.commons.helpers.NavigationIcon
-import org.fossify.commons.helpers.isTiramisuPlus
-import org.fossify.commons.models.RadioItem
+import com.itamadersomajinc.banglatype.commons.dialogs.RadioGroupDialog
+import com.itamadersomajinc.banglatype.commons.extensions.beVisibleIf
+import com.itamadersomajinc.banglatype.commons.extensions.getProperPrimaryColor
+import com.itamadersomajinc.banglatype.commons.extensions.toast
+import com.itamadersomajinc.banglatype.commons.extensions.updateTextColors
+import com.itamadersomajinc.banglatype.commons.extensions.viewBinding
+import com.itamadersomajinc.banglatype.commons.helpers.NavigationIcon
+import com.itamadersomajinc.banglatype.commons.helpers.isTiramisuPlus
+import com.itamadersomajinc.banglatype.commons.models.RadioItem
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.databinding.ActivitySettingsBinding
 import com.itamadersomajinc.banglatype.dialogs.ManageKeyboardLanguagesDialog

@@ -7,10 +7,10 @@ import android.os.Bundle
 import android.widget.Toast
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import org.fossify.commons.dialogs.FilePickerDialog
-import org.fossify.commons.extensions.*
-import org.fossify.commons.helpers.*
-import org.fossify.commons.interfaces.RefreshRecyclerViewListener
+import com.itamadersomajinc.banglatype.commons.dialogs.FilePickerDialog
+import com.itamadersomajinc.banglatype.commons.extensions.*
+import com.itamadersomajinc.banglatype.commons.helpers.*
+import com.itamadersomajinc.banglatype.commons.interfaces.RefreshRecyclerViewListener
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.adapters.ClipsActivityAdapter
 import com.itamadersomajinc.banglatype.databinding.ActivityManageClipboardItemsBinding
