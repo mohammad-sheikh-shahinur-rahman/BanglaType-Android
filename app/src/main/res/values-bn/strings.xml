@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_launcher_name">BanglaType</string>
+    <string name="redirection_note">BanglaType কিবোর্ড হিসেবে ব্যবহারের জন্য পরবর্তী স্ক্রিনে এটি চালু করুন। চালু করার পর \'Back\' প্রেস করুন।</string>
+    <string name="change_keyboard">কিবোর্ড পরিবর্তন করুন</string>
+    <string name="test_keyboard">কিবোর্ড পরীক্ষা করুন</string>
+    <string name="type_something">কিছু লিখুন...</string>
+    <string name="about_developer">ডেভেলপার সম্পর্কে</string>
+    <string name="about_developer_name">আইটি আমাদেরসমাজ .ইনকর্পোরেটেড</string>
+    <string name="follow_us_facebook">ফেসবুকে আমাদের অনুসরণ করুন</string>
+</resources>
