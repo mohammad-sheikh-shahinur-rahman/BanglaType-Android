@@ -11,13 +11,16 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
 
+    <!-- Used for in-app voice typing via SpeechRecognizer -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <application
         android:name="com.itamadersomajinc.banglatype.App"
         android:allowBackup="true"
         android:appCategory="productivity"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/logo_banglatype"
         android:label="@string/app_launcher_name"
-        android:roundIcon="@mipmap/ic_launcher"
+        android:roundIcon="@drawable/logo_banglatype"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
@@ -74,6 +77,19 @@
             android:configChanges="orientation"
             android:label="@string/customize_colors"
             android:parentActivityName=".activities.SettingsActivity" />
+
+        <activity
+            android:name=".activities.KeyboardThemePickerActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/keyboard_theme"
+            android:parentActivityName=".activities.SettingsActivity" />
+
+        <activity
+            android:name=".activities.VoicePermissionActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity-alias
             android:name=".activities.SplashActivity.Red"
@@ -205,8 +221,8 @@
             android:name=".activities.SplashActivity.Green"
             android:enabled="true"
             android:exported="true"
-            android:icon="@mipmap/ic_launcher"
-            android:roundIcon="@mipmap/ic_launcher"
+            android:icon="@drawable/logo_banglatype"
+            android:roundIcon="@drawable/logo_banglatype"
             android:targetActivity=".activities.SplashActivity">
 
             <intent-filter>

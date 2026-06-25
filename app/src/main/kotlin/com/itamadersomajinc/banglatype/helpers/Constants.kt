@@ -27,10 +27,22 @@ const val LAST_EXPORTED_CLIPS_FOLDER = "last_exported_clips_folder"
 const val KEYBOARD_LANGUAGE = "keyboard_language"
 const val HEIGHT_PERCENTAGE = "height_percentage"
 const val SHOW_CLIPBOARD_CONTENT = "show_clipboard_content"
+const val SHOW_SUGGESTIONS = "show_suggestions"
+const val CLIPBOARD_HISTORY_ENABLED = "clipboard_history_enabled"
+const val CLIPBOARD_HISTORY_LIMIT = 50
 const val SHOW_NUMBERS_ROW = "show_numbers_row"
 const val SELECTED_LANGUAGES = "selected_languages"
 const val VOICE_INPUT_METHOD = "voice_input_method"
 const val RECENTLY_USED_EMOJIS = "recently_used_emojis"
+
+// custom keyboard theme (Gboard-style)
+const val KEYBOARD_THEME_ID = "keyboard_theme_id"
+const val KEYBOARD_BG_IMAGE_PATH = "keyboard_bg_image_path"
+const val KEYBOARD_BG_DIM = "keyboard_bg_dim"
+const val KEYBOARD_THEME_DEFAULT = "default"
+const val KEYBOARD_THEME_CUSTOM_PHOTO = "custom_photo"
+const val KEYBOARD_BG_IMAGE_FILE = "keyboard_bg.jpg"
+const val DEFAULT_KEYBOARD_BG_DIM = 35
 
 // differentiate current and pinned clips at the keyboards' Clipboard section
 const val ITEM_SECTION_LABEL = 0
@@ -81,52 +93,17 @@ const val LANGUAGE_ENGLISH_NIRO = 42
 const val LANGUAGE_ENGLISH_SOUL = 43
 const val LANGUAGE_ENGLISH_WORKMAN = 44
 
-// Keep this sorted
+// Bangla layouts
+const val LANGUAGE_BANGLA_AVRO = 45
+const val LANGUAGE_BANGLA_JATIYO = 46
+const val LANGUAGE_BANGLA_PROBHAT = 47
+
+// Keep this sorted (by display name). BanglaType exposes only Bangla layouts plus plain English.
 val SUPPORTED_LANGUAGES = listOf(
-    LANGUAGE_ARABIC,
-    LANGUAGE_BELARUSIAN_CYRL,
-    LANGUAGE_BELARUSIAN_LATN,
-    LANGUAGE_BENGALI,
-    LANGUAGE_BULGARIAN,
-    LANGUAGE_CENTRAL_KURDISH,
-    LANGUAGE_CHUVASH,
-    LANGUAGE_CZECH_QWERTY,
-    LANGUAGE_CZECH_QWERTZ,
-    LANGUAGE_DANISH,
-    LANGUAGE_DUTCH,
+    LANGUAGE_BANGLA_AVRO,
     LANGUAGE_ENGLISH_QWERTY,
-    LANGUAGE_ENGLISH_QWERTZ,
-    LANGUAGE_ENGLISH_ASSET,
-    LANGUAGE_ENGLISH_COLEMAK,
-    LANGUAGE_ENGLISH_COLEMAKDH,
-    LANGUAGE_ENGLISH_DVORAK,
-    LANGUAGE_ENGLISH_NIRO,
-    LANGUAGE_ENGLISH_SOUL,
-    LANGUAGE_ENGLISH_WORKMAN,
-    LANGUAGE_ESPERANTO,
-    LANGUAGE_FRENCH_AZERTY,
-    LANGUAGE_FRENCH_BEPO,
-    LANGUAGE_GERMAN,
-    LANGUAGE_GERMAN_QWERTZ,
-    LANGUAGE_GREEK,
-    LANGUAGE_HEBREW,
-    LANGUAGE_ITALIAN,
-    LANGUAGE_KABYLE_AZERTY,
-    LANGUAGE_LATVIAN,
-    LANGUAGE_LITHUANIAN,
-    LANGUAGE_NORWEGIAN,
-    LANGUAGE_POLISH,
-    LANGUAGE_PORTUGUESE,
-    LANGUAGE_PORTUGUESE_HCESAR,
-    LANGUAGE_ROMANIAN,
-    LANGUAGE_RUSSIAN,
-    LANGUAGE_SLOVENIAN,
-    LANGUAGE_SPANISH,
-    LANGUAGE_SWEDISH,
-    LANGUAGE_TURKISH,
-    LANGUAGE_TURKISH_Q,
-    LANGUAGE_UKRAINIAN,
-    LANGUAGE_VIETNAMESE_TELEX
+    LANGUAGE_BANGLA_JATIYO,
+    LANGUAGE_BANGLA_PROBHAT
 )
 
 // keyboard height percentage options
@@ -139,7 +116,9 @@ const val KEYBOARD_HEIGHT_140_PERCENT = 140
 const val KEYBOARD_HEIGHT_160_PERCENT = 160
 
 const val EMOJI_SPEC_FILE_PATH = "media/emoji_spec.txt"
+const val EMOJI_KEYWORDS_FILE_PATH = "media/emoji_keywords.json"
 const val LANGUAGE_VN_TELEX = "language/extension.json"
+const val LANGUAGE_AVRO_RULES = "language/avro_rules.json"
 const val RECENT_EMOJIS_LIMIT = 36
 
 // Android constant

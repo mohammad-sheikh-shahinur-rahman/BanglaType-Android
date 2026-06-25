@@ -20,6 +20,8 @@ import com.itamadersomajinc.banglatype.extensions.getKeyboardLanguageText
 import com.itamadersomajinc.banglatype.extensions.getKeyboardLanguagesRadioItems
 import com.itamadersomajinc.banglatype.extensions.getVoiceInputMethods
 import com.itamadersomajinc.banglatype.extensions.getVoiceInputRadioItems
+import com.itamadersomajinc.banglatype.extensions.selectedKeyboardTheme
+import com.itamadersomajinc.banglatype.helpers.KEYBOARD_THEME_CUSTOM_PHOTO
 import com.itamadersomajinc.banglatype.helpers.KEYBOARD_HEIGHT_100_PERCENT
 import com.itamadersomajinc.banglatype.helpers.KEYBOARD_HEIGHT_120_PERCENT
 import com.itamadersomajinc.banglatype.helpers.KEYBOARD_HEIGHT_140_PERCENT
@@ -51,6 +53,7 @@ class SettingsActivity : SimpleActivity() {
         setupTopAppBar(binding.settingsAppbar, NavigationIcon.Arrow)
 
         setupCustomizeColors()
+        setupKeyboardTheme()
         setupUseEnglish()
         setupLanguage()
         setupManageClipboardItems()
@@ -88,6 +91,20 @@ class SettingsActivity : SimpleActivity() {
         binding.apply {
             settingsColorCustomizationHolder.setOnClickListener {
                 startCustomizationActivity()
+            }
+        }
+    }
+
+    private fun setupKeyboardTheme() {
+        binding.apply {
+            settingsKeyboardThemeValue.text = when {
+                config.keyboardThemeId == KEYBOARD_THEME_CUSTOM_PHOTO -> getString(R.string.my_photo)
+                else -> selectedKeyboardTheme()?.let { getString(it.nameResId) } ?: getString(R.string.theme_default)
+            }
+            settingsKeyboardThemeHolder.setOnClickListener {
+                Intent(this@SettingsActivity, KeyboardThemePickerActivity::class.java).apply {
+                    startActivity(this)
+                }
             }
         }
     }
@@ -258,6 +275,18 @@ class SettingsActivity : SimpleActivity() {
             settingsShowClipboardContentHolder.setOnClickListener {
                 settingsShowClipboardContent.toggle()
                 config.showClipboardContent = settingsShowClipboardContent.isChecked
+            }
+
+            settingsClipboardHistory.isChecked = config.clipboardHistoryEnabled
+            settingsClipboardHistoryHolder.setOnClickListener {
+                settingsClipboardHistory.toggle()
+                config.clipboardHistoryEnabled = settingsClipboardHistory.isChecked
+            }
+
+            settingsShowSuggestions.isChecked = config.showSuggestions
+            settingsShowSuggestionsHolder.setOnClickListener {
+                settingsShowSuggestions.toggle()
+                config.showSuggestions = settingsShowSuggestions.isChecked
             }
         }
     }

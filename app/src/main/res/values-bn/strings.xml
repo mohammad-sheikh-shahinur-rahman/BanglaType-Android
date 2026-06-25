@@ -6,6 +6,43 @@
     <string name="test_keyboard">কিবোর্ড পরীক্ষা করুন</string>
     <string name="type_something">কিছু লিখুন...</string>
     <string name="about_developer">ডেভেলপার সম্পর্কে</string>
-    <string name="about_developer_name">আইটি আমাদেরসমাজ .ইনকর্পোরেটেড</string>
+    <string name="about_developer_name">আইটি আমাদের সমাজ .ইনকর্পোরেটেড</string>
     <string name="follow_us_facebook">ফেসবুকে আমাদের অনুসরণ করুন</string>
+    <string name="fast_secure_open_source">দ্রুত • নিরাপদ • ওপেন সোর্স</string>
+    <string name="app_full_description">BanglaType একটি উন্নত, ফ্রি ও হালকা কিবোর্ড (IME) — স্মার্ট ফোনেটিক, ফিক্সড লেআউট বিল্ডার, অটো আপডেট এবং কথা-থেকে-লেখা সমর্থন করে।</string>
+    <string name="key_features">মূল বৈশিষ্ট্য</string>
+    <string name="feature_phonetic">স্মার্ট ফোনেটিক</string>
+    <string name="feature_layout">ফিক্সড লেআউট</string>
+    <string name="feature_updates">অটো আপডেট</string>
+    <string name="feature_voice">কথা-থেকে-লেখা</string>
+    <string name="layout_and_appearance">লেআউট ও চেহারা</string>
+    <string name="show_suggestions">শব্দ পরামর্শ দেখান</string>
+    <string name="clipboard_history_enabled">ক্লিপবোর্ড ইতিহাস সংরক্ষণ করুন</string>
+    <string name="search_emojis">ইমোজি খুঁজুন…</string>
+    <string name="search_clipboard">ক্লিপ খুঁজুন…</string>
+    <string name="clip_deleted">ক্লিপ মুছে ফেলা হয়েছে</string>
+    <string name="voice_typing">ভয়েস টাইপিং</string>
+    <string name="tap_to_speak">বলতে ট্যাপ করুন</string>
+
+    <!-- Voice typing -->
+    <string name="listening">শুনছি…</string>
+    <string name="processing">প্রসেস হচ্ছে…</string>
+    <string name="mic_permission_needed">ভয়েস টাইপিংয়ের জন্য মাইক্রোফোন অনুমতি প্রয়োজন</string>
+    <string name="voice_permission_granted">মাইক্রোফোন চালু হয়েছে — শুরু করতে মাইকে ট্যাপ করুন</string>
+
+    <!-- Keyboard themes -->
+    <string name="keyboard_theme">কিবোর্ড থিম</string>
+    <string name="my_photo">আমার ছবি</string>
+    <string name="choose_photo">একটি ছবি বেছে নিন</string>
+    <string name="theme_brightness">ব্যাকগ্রাউন্ড উজ্জ্বলতা</string>
+    <string name="theme_applied">থিম প্রয়োগ হয়েছে</string>
+    <string name="failed_to_load_image">নির্বাচিত ছবিটি লোড করা যায়নি</string>
+    <string name="theme_default">ক্লাসিক</string>
+    <string name="theme_light">লাইট</string>
+    <string name="theme_midnight">মিডনাইট</string>
+    <string name="theme_rose">রোজ</string>
+    <string name="theme_ocean">ওশান</string>
+    <string name="theme_sunset">সানসেট</string>
+    <string name="theme_forest">ফরেস্ট</string>
+    <string name="theme_grape">গ্রেপ</string>
 </resources>

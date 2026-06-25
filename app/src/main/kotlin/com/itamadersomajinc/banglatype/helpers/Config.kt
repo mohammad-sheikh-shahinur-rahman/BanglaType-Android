@@ -55,6 +55,14 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getBoolean(SHOW_CLIPBOARD_CONTENT, true)
         set(showClipboardContent) = prefs.edit().putBoolean(SHOW_CLIPBOARD_CONTENT, showClipboardContent).apply()
 
+    var showSuggestions: Boolean
+        get() = prefs.getBoolean(SHOW_SUGGESTIONS, true)
+        set(showSuggestions) = prefs.edit().putBoolean(SHOW_SUGGESTIONS, showSuggestions).apply()
+
+    var clipboardHistoryEnabled: Boolean
+        get() = prefs.getBoolean(CLIPBOARD_HISTORY_ENABLED, true)
+        set(clipboardHistoryEnabled) = prefs.edit().putBoolean(CLIPBOARD_HISTORY_ENABLED, clipboardHistoryEnabled).apply()
+
     var showNumbersRow: Boolean
         get() = if (context.isDeviceLocked) {
             true
@@ -66,6 +74,23 @@ class Config(context: Context) : BaseConfig(context) {
     var voiceInputMethod: String
         get() = prefs.getString(VOICE_INPUT_METHOD, "")!!
         set(voiceInputMethod) = prefs.edit().putString(VOICE_INPUT_METHOD, voiceInputMethod).apply()
+
+    // ---- Custom keyboard theme (Gboard-style) ----
+
+    var keyboardThemeId: String
+        get() = prefs.getString(KEYBOARD_THEME_ID, KEYBOARD_THEME_DEFAULT)!!
+        set(keyboardThemeId) = prefs.edit().putString(KEYBOARD_THEME_ID, keyboardThemeId).apply()
+
+    // Absolute path of the user-picked background photo (stored in device-protected storage so the
+    // keyboard can read it even while the device is locked). Empty when no photo theme is set.
+    var keyboardBackgroundImagePath: String
+        get() = prefs.getString(KEYBOARD_BG_IMAGE_PATH, "")!!
+        set(keyboardBackgroundImagePath) = prefs.edit().putString(KEYBOARD_BG_IMAGE_PATH, keyboardBackgroundImagePath).apply()
+
+    // Darkening scrim drawn over the background image/gradient, 0 (none) .. 100 (black).
+    var keyboardBackgroundDim: Int
+        get() = prefs.getInt(KEYBOARD_BG_DIM, DEFAULT_KEYBOARD_BG_DIM)
+        set(keyboardBackgroundDim) = prefs.edit().putInt(KEYBOARD_BG_DIM, keyboardBackgroundDim).apply()
 
     var selectedLanguages: MutableSet<Int>
         get() {

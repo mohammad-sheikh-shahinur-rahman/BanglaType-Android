@@ -48,4 +48,25 @@ interface OnKeyboardActionListener {
      * Called when input method is changed in-app.
      */
     fun changeInputMethod(id: String, subtype: InputMethodSubtype)
+
+    /**
+     * Called when the user taps a word-prediction suggestion in the toolbar.
+     */
+    fun onPredictionPicked(word: String)
+
+    /**
+     * Called when the user swipes horizontally across the spacebar to change language.
+     * @param forward true to move to the next language, false for the previous one.
+     */
+    fun onSpaceSwipeLanguage(forward: Boolean)
+
+    /**
+     * Called when the user taps the speech-bar mic to start in-app voice typing.
+     */
+    fun onStartVoiceInput()
+
+    /**
+     * Called to stop an in-progress in-app voice typing session.
+     */
+    fun onStopVoiceInput()
 }

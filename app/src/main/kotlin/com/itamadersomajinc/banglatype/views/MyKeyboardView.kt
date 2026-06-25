@@ -23,12 +23,15 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.speech.SpeechRecognizer
 import android.util.AttributeSet
+import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewConfiguration
 import android.view.animation.AccelerateInterpolator
 import android.view.inputmethod.EditorInfo
@@ -47,6 +50,7 @@ import androidx.emoji2.text.EmojiCompat
 import androidx.emoji2.text.EmojiCompat.EMOJI_SUPPORTED
 import androidx.recyclerview.widget.GridLayoutManager.SpanSizeLookup
 import com.itamadersomajinc.banglatype.commons.extensions.adjustAlpha
+import com.itamadersomajinc.banglatype.commons.extensions.onTextChangeListener
 import com.itamadersomajinc.banglatype.commons.extensions.applyColorFilter
 import com.itamadersomajinc.banglatype.commons.extensions.beGone
 import com.itamadersomajinc.banglatype.commons.extensions.beGoneIf
@@ -58,6 +62,7 @@ import com.itamadersomajinc.banglatype.commons.extensions.getContrastColor
 import com.itamadersomajinc.banglatype.commons.extensions.getProperBackgroundColor
 import com.itamadersomajinc.banglatype.commons.extensions.getProperPrimaryColor
 import com.itamadersomajinc.banglatype.commons.extensions.getProperTextColor
+import com.itamadersomajinc.banglatype.commons.extensions.hasPermission
 import com.itamadersomajinc.banglatype.commons.extensions.isDynamicTheme
 import com.itamadersomajinc.banglatype.commons.extensions.lightenColor
 import com.itamadersomajinc.banglatype.commons.extensions.removeUnderlines
@@ -66,9 +71,11 @@ import com.itamadersomajinc.banglatype.commons.helpers.FontHelper
 import com.itamadersomajinc.banglatype.commons.helpers.HIGHER_ALPHA
 import com.itamadersomajinc.banglatype.commons.helpers.ensureBackgroundThread
 import com.itamadersomajinc.banglatype.commons.helpers.isPiePlus
+import com.itamadersomajinc.banglatype.commons.helpers.PERMISSION_RECORD_AUDIO
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.activities.ManageClipboardItemsActivity
 import com.itamadersomajinc.banglatype.activities.SettingsActivity
+import com.itamadersomajinc.banglatype.activities.VoicePermissionActivity
 import com.itamadersomajinc.banglatype.adapters.ClipsKeyboardAdapter
 import com.itamadersomajinc.banglatype.adapters.EmojisAdapter
 import com.itamadersomajinc.banglatype.databinding.ItemEmojiCategoryBinding
@@ -80,16 +87,25 @@ import com.itamadersomajinc.banglatype.extensions.clipsDB
 import com.itamadersomajinc.banglatype.extensions.config
 import com.itamadersomajinc.banglatype.extensions.getCurrentClip
 import com.itamadersomajinc.banglatype.extensions.getCurrentVoiceInputMethod
+import com.itamadersomajinc.banglatype.extensions.getOrAutoSelectVoiceInputMethod
+import com.itamadersomajinc.banglatype.extensions.getVoiceInputMethods
 import com.itamadersomajinc.banglatype.extensions.getKeyboardBackgroundColor
+import com.itamadersomajinc.banglatype.extensions.hasKeyboardBackgroundDrawable
 import com.itamadersomajinc.banglatype.extensions.getStrokeColor
 import com.itamadersomajinc.banglatype.extensions.isDeviceLocked
 import com.itamadersomajinc.banglatype.extensions.onScroll
 import com.itamadersomajinc.banglatype.extensions.safeStorageContext
 import com.itamadersomajinc.banglatype.helpers.AccessHelper
+import com.itamadersomajinc.banglatype.helpers.ClipsHelper
 import com.itamadersomajinc.banglatype.helpers.EMOJI_SPEC_FILE_PATH
 import com.itamadersomajinc.banglatype.helpers.EmojiData
+import com.itamadersomajinc.banglatype.helpers.EMOJI_KEYWORDS_FILE_PATH
+import com.itamadersomajinc.banglatype.helpers.parseEmojiKeywords
+import com.itamadersomajinc.banglatype.helpers.searchEmojis
 import com.itamadersomajinc.banglatype.helpers.KeyboardFeedbackManager
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_TURKISH_Q
+import com.itamadersomajinc.banglatype.helpers.AvroParser
+import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BANGLA_AVRO
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_VIETNAMESE_TELEX
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_VN_TELEX
 import com.itamadersomajinc.banglatype.helpers.MAX_KEYS_PER_MINI_ROW
@@ -134,6 +150,10 @@ class MyKeyboardView @JvmOverloads constructor(
 
     private var keyboardPopupBinding: KeyboardPopupKeyboardBinding? = null
     private var keyboardViewBinding: KeyboardViewKeyboardBinding? = null
+    private var clipSearchQuery = ""
+    private var emojiSearchQuery = ""
+    private var loadedEmojis: List<EmojiData> = emptyList()
+    private var emojiAdapterItems: List<EmojisAdapter.Item> = emptyList()
 
     private var accessHelper: AccessHelper? = null
     private val feedbackManager by lazy { KeyboardFeedbackManager(context) }
@@ -201,12 +221,21 @@ class MyKeyboardView @JvmOverloads constructor(
     private var mTopSmallNumberMarginWidth = 0f
     private var mTopSmallNumberMarginHeight = 0f
     private val mSpaceMoveThreshold: Int
+    // a deliberate horizontal spacebar swipe (larger than the old cursor step) cycles the language
+    private val mLanguageSwipeThreshold: Int
     private var ignoreTouches = false
 
     private var mKeyBackground: Drawable? = null
     private var mShowKeyBorders: Boolean = false
     private var mUsingSystemTheme: Boolean = true
     private var mVoiceInputMethod: String = ""
+
+    // Gboard-style photo/gradient background drawn behind the keys (null = plain color theme).
+    private var mHasBackgroundImage: Boolean = false
+
+    // In-app voice typing state for the speech bar.
+    private var mVoiceListening: Boolean = false
+    private var mVoiceMicAnimator: AnimatorSet? = null
 
     private var mToolbarHolder: View? = null
     private var mClipboardManagerHolder: View? = null
@@ -271,6 +300,7 @@ class MyKeyboardView @JvmOverloads constructor(
         mSpaceBarTextSize = resources.getDimension(R.dimen.space_bar_text_size).toInt()
         mPreviewHeight = resources.getDimension(R.dimen.key_height).toInt()
         mSpaceMoveThreshold = resources.getDimension(R.dimen.medium_margin).toInt()
+        mLanguageSwipeThreshold = mSpaceMoveThreshold * 3
 
         with(safeStorageContext) {
             mTextColor = getProperTextColor()
@@ -342,6 +372,7 @@ class MyKeyboardView @JvmOverloads constructor(
         }
 
         closeClipboardManager()
+        closeSpeechBar()
         removeMessages()
         mKeyboard = keyboard
         val keys = mKeyboard!!.mKeys
@@ -371,14 +402,31 @@ class MyKeyboardView @JvmOverloads constructor(
 
             voiceInputButton.setOnLongClickListener { context.toast(R.string.switch_to_voice_typing); true }
             voiceInputButton.setOnClickListener {
-                val inputMethod = context.getCurrentVoiceInputMethod()
-                if (inputMethod == null) {
-                    context.toast(R.string.no_app_found)
+                vibrateIfNeeded()
+                openSpeechBar()
+            }
+
+            speechBarClose.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onStopVoiceInput()
+                closeSpeechBar()
+            }
+            speechBarMic.setOnClickListener {
+                vibrateIfNeeded()
+                // In-app voice typing via SpeechRecognizer. Needs the RECORD_AUDIO runtime permission,
+                // which the IME service requests through a tiny transparent activity.
+                if (!context.hasPermission(PERMISSION_RECORD_AUDIO)) {
+                    Intent(context, VoicePermissionActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(this)
+                    }
                     return@setOnClickListener
                 }
-
-                val (im, type) = inputMethod
-                mOnKeyboardActionListener?.changeInputMethod(im.id, type)
+                if (mVoiceListening) {
+                    mOnKeyboardActionListener?.onStopVoiceInput()
+                } else {
+                    mOnKeyboardActionListener?.onStartVoiceInput()
+                }
             }
 
             settingsCog.setOnLongClickListener { context.toast(R.string.settings); true; }
@@ -427,6 +475,12 @@ class MyKeyboardView @JvmOverloads constructor(
             val clipboardContent = clipboardManager.primaryClip?.getItemAt(0)?.text?.trim()
             if (clipboardContent?.isNotEmpty() == true) {
                 handleClipboard()
+                if (context.config.clipboardHistoryEnabled) {
+                    ensureBackgroundThread {
+                        ClipsHelper(context).addToHistory(clipboardContent.toString())
+                        setupStoredClips()
+                    }
+                }
             }
             setupStoredClips()
         }
@@ -449,6 +503,74 @@ class MyKeyboardView @JvmOverloads constructor(
                 vibrateIfNeeded()
                 closeEmojiPalette()
             }
+
+            clipboardSearch.onTextChangeListener { newText ->
+                clipSearchQuery = newText
+                setupStoredClips()
+            }
+
+            emojiSearch.onTextChangeListener { newText ->
+                filterEmojis(newText)
+            }
+        }
+    }
+
+    /** Populates the word-prediction strip in the toolbar. Empty list hides it. */
+    fun setPredictions(words: List<String>) {
+        val binding = keyboardViewBinding ?: return
+        val strip = binding.predictionsStrip
+        strip.removeAllViews()
+        if (words.isEmpty() || context.isDeviceLocked) {
+            strip.beGone()
+            updateSuggestionsToolbarLayout()
+            return
+        }
+        words.forEachIndexed { index, word ->
+            if (index > 0) {
+                strip.addView(buildPredictionDivider())
+            }
+            strip.addView(buildPredictionChip(word))
+        }
+        strip.beVisible()
+        // predictions take precedence over the inline clipboard preview
+        binding.clipboardValue.beGone()
+        updateSuggestionsToolbarLayout()
+    }
+
+    private fun buildPredictionChip(word: String): TextView {
+        return TextView(context).apply {
+            text = word
+            gravity = Gravity.CENTER
+            maxLines = 1
+            ellipsize = TextUtils.TruncateAt.END
+            setTextColor(mTextColor)
+            setTextSize(TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.label_text_size))
+            val h = resources.getDimensionPixelSize(R.dimen.activity_margin)
+            setPadding(h, 0, h, 0)
+            val outValue = TypedValue()
+            context.theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
+            setBackgroundResource(outValue.resourceId)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT
+            )
+            setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onPredictionPicked(word)
+            }
+        }
+    }
+
+    private fun buildPredictionDivider(): View {
+        return View(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                1, LinearLayout.LayoutParams.MATCH_PARENT
+            ).apply {
+                val v = resources.getDimensionPixelSize(R.dimen.small_margin)
+                topMargin = v
+                bottomMargin = v
+            }
+            setBackgroundColor(mStrokeColor)
+            alpha = 0.5f
         }
     }
 
@@ -468,9 +590,17 @@ class MyKeyboardView @JvmOverloads constructor(
             mShowKeyBorders = config.showKeyBorders
             mUsingSystemTheme = isDynamicTheme()
             mVoiceInputMethod = config.voiceInputMethod
+            mHasBackgroundImage = hasKeyboardBackgroundDrawable()
         }
 
         val isMainKeyboard = changedView == null || changedView.id != R.id.mini_keyboard_view
+
+        // Photo/gradient theme: keep keys & text legible over the image with a light-on-dark scheme.
+        if (mHasBackgroundImage && isMainKeyboard) {
+            mTextColor = Color.WHITE
+            mStrokeColor = Color.WHITE.adjustAlpha(0.3f)
+        }
+
         mKeyColor = getKeyColor()
         mKeyColorPressed = mKeyColor.adjustAlpha(0.2f)
         mKeyBackground = if (mShowKeyBorders && isMainKeyboard) {
@@ -486,15 +616,24 @@ class MyKeyboardView @JvmOverloads constructor(
             previewBackground.findDrawableByLayerId(R.id.button_background_stroke)
                 .applyColorFilter(mStrokeColor)
             background = previewBackground
+        } else if (mHasBackgroundImage) {
+            // The background image is painted on the keyboard holder (covering toolbar + keys as one
+            // continuous image); keep this view transparent so it shows through behind the keys.
+            background = ColorDrawable(Color.TRANSPARENT)
         } else {
-            background.applyColorFilter(mKeyboardBackgroundColor)
+            background = ColorDrawable(mKeyboardBackgroundColor)
         }
 
         val wasDarkened = mBackgroundColor != mBackgroundColor.darkenColor()
         keyboardViewBinding?.apply {
-            topKeyboardDivider.beGoneIf(wasDarkened)
+            topKeyboardDivider.beGoneIf(wasDarkened || mHasBackgroundImage)
             topKeyboardDivider.background = ColorDrawable(mStrokeColor)
-            mToolbarHolder?.background = ColorDrawable(mKeyboardBackgroundColor)
+            // For photo/gradient themes keep the toolbar transparent so the background image shows through.
+            mToolbarHolder?.background = if (mHasBackgroundImage) {
+                ColorDrawable(Color.TRANSPARENT)
+            } else {
+                ColorDrawable(mKeyboardBackgroundColor)
+            }
 
             clipboardValue.apply {
                 background =
@@ -515,7 +654,8 @@ class MyKeyboardView @JvmOverloads constructor(
             pinnedClipboardItems.applyColorFilter(mTextColor)
             clipboardClear.applyColorFilter(mTextColor)
             voiceInputButton.applyColorFilter(mTextColor)
-            voiceInputButton.beGoneIf(mVoiceInputMethod.isEmpty())
+            // Show the mic whenever on-device speech recognition is available.
+            voiceInputButton.beGoneIf(!SpeechRecognizer.isRecognitionAvailable(context))
 
             mToolbarHolder?.beInvisibleIf(context.isDeviceLocked)
 
@@ -530,6 +670,16 @@ class MyKeyboardView @JvmOverloads constructor(
             clipboardManagerLabel.setTextColor(mTextColor)
             clipboardContentPlaceholder1.setTextColor(mTextColor)
             clipboardContentPlaceholder2.setTextColor(mTextColor)
+            clipboardSearch.setTextColor(mTextColor)
+            clipboardSearch.setHintTextColor(mTextColor.adjustAlpha(0.5f))
+
+            speechBarHolder.background = ColorDrawable(mBackgroundColor)
+            speechBarTopBar.background = ColorDrawable(mKeyboardBackgroundColor)
+            speechBarClose.applyColorFilter(mTextColor)
+            speechBarLabel.setTextColor(mTextColor)
+            speechBarHint.setTextColor(mTextColor.adjustAlpha(0.8f))
+            speechBarMic.background.applyColorFilter(mPrimaryColor)
+            speechBarMic.applyColorFilter(mPrimaryColor.getContrastColor())
         }
 
         setupEmojiPalette(
@@ -541,6 +691,9 @@ class MyKeyboardView @JvmOverloads constructor(
             setupLanguageTelex()
         } else {
             cachedVNTelexData.clear()
+        }
+        if (context.config.keyboardLanguage == LANGUAGE_BANGLA_AVRO) {
+            ensureBackgroundThread { AvroParser.preload(context) }
         }
         setupStoredClips()
     }
@@ -686,7 +839,11 @@ class MyKeyboardView @JvmOverloads constructor(
         for (i in 0 until keyCount) {
             val key = keys[i]
             val code = key.code
-            val label = adjustCase(key.label)?.toString()
+            val label = if (mKeyboard!!.mShiftState != ShiftState.OFF && key.shiftedLabel != null) {
+                key.shiftedLabel.toString()
+            } else {
+                adjustCase(key.label)?.toString()
+            }
 
             setupKeyBackground(key, code, canvas)
             val textColor = when {
@@ -1002,7 +1159,12 @@ class MyKeyboardView @JvmOverloads constructor(
         if (index != NOT_A_KEY && index in mKeys.indices) {
             val key = mKeys[index]
             getPressedKeyIndex(x, y)
-            mOnKeyboardActionListener!!.onKey(key.code)
+            val codeToSend = if (mKeyboard!!.mShiftState != ShiftState.OFF && key.shiftedCode != 0) {
+                key.shiftedCode
+            } else {
+                key.code
+            }
+            mOnKeyboardActionListener!!.onKey(codeToSend)
             mLastTapTime = eventTime
         }
     }
@@ -1045,7 +1207,12 @@ class MyKeyboardView @JvmOverloads constructor(
             mPreviewText!!.setCompoundDrawables(null, null, null, key.icon)
         } else {
             val customTypeface = FontHelper.getTypeface(context)
-            if (key.label.length > 1) {
+            val previewLabel = if (mKeyboard?.mShiftState != ShiftState.OFF && key.shiftedLabel != null) {
+                key.shiftedLabel
+            } else {
+                adjustCase(key.label)
+            }
+            if ((previewLabel?.length ?: 0) > 1) {
                 mPreviewText!!.setTextSize(TypedValue.COMPLEX_UNIT_PX, mKeyTextSize.toFloat())
                 mPreviewText!!.typeface = Typeface.create(customTypeface, Typeface.BOLD)
             } else {
@@ -1058,7 +1225,7 @@ class MyKeyboardView @JvmOverloads constructor(
 
             mPreviewText!!.setCompoundDrawables(null, null, null, null)
             try {
-                mPreviewText!!.text = adjustCase(key.label)
+                mPreviewText!!.text = previewLabel
             } catch (ignored: Exception) {
             }
         }
@@ -1488,7 +1655,7 @@ class MyKeyboardView @JvmOverloads constructor(
                     }
                 }
 
-                // activate cursor control immediately on sufficient movement
+                // swipe horizontally across the spacebar to cycle the keyboard language
                 val currentKey = mKeys.getOrNull(mCurrentKey)
                 if (currentKey?.code == KEYCODE_SPACE && mLastSpaceMoveX != 0) {
                     if (mLastSpaceMoveX == -1) {
@@ -1496,17 +1663,13 @@ class MyKeyboardView @JvmOverloads constructor(
                     }
 
                     val diff = mLastX - mLastSpaceMoveX
-                    if (diff < -mSpaceMoveThreshold) {
-                        for (i in diff / mSpaceMoveThreshold until 0) {
-                            mOnKeyboardActionListener?.moveCursorLeft()
-                        }
+                    if (diff <= -mLanguageSwipeThreshold) {
+                        mOnKeyboardActionListener?.onSpaceSwipeLanguage(false)
                         mLastSpaceMoveX = mLastX
                         if (!mCursorControlActive) mHandler?.removeMessages(MSG_LONGPRESS)
                         mCursorControlActive = true
-                    } else if (diff > mSpaceMoveThreshold) {
-                        for (i in 0 until diff / mSpaceMoveThreshold) {
-                            mOnKeyboardActionListener?.moveCursorRight()
-                        }
+                    } else if (diff >= mLanguageSwipeThreshold) {
+                        mOnKeyboardActionListener?.onSpaceSwipeLanguage(true)
                         mLastSpaceMoveX = mLastX
                         if (!mCursorControlActive) mHandler?.removeMessages(MSG_LONGPRESS)
                         mCursorControlActive = true
@@ -1600,11 +1763,82 @@ class MyKeyboardView @JvmOverloads constructor(
     }
 
     private fun openClipboardManager() {
+        clipSearchQuery = ""
         keyboardViewBinding?.apply {
             clipboardManagerHolder.beVisible()
+            clipboardSearch.setText("")
             suggestionsHolder.hideAllInlineContentViews()
         }
         setupStoredClips()
+    }
+
+    fun openSpeechBar() {
+        keyboardViewBinding?.apply {
+            emojiPaletteHolder.beGone()
+            clipboardManagerHolder.beGone()
+            speechBarHolder.beVisible()
+            suggestionsHolder.beGone()
+            speechBarHint.text = context.getString(R.string.tap_to_speak)
+        }
+        setVoiceListening(false)
+    }
+
+    fun closeSpeechBar() {
+        setVoiceListening(false)
+        keyboardViewBinding?.apply {
+            speechBarHolder.beGone()
+            suggestionsHolder.beVisible()
+        }
+    }
+
+    /** Reflects the listening state in the speech bar: pulse animation + hint text. */
+    fun setVoiceListening(listening: Boolean) {
+        mVoiceListening = listening
+        keyboardViewBinding?.apply {
+            if (listening) {
+                speechBarHint.text = context.getString(R.string.listening)
+                startMicPulse(speechBarMic)
+            } else {
+                stopMicPulse(speechBarMic)
+            }
+        }
+    }
+
+    /** Shows the live (partial) transcript in the speech bar while listening. */
+    fun setVoicePartialText(text: String) {
+        keyboardViewBinding?.speechBarHint?.text =
+            text.ifBlank { context.getString(if (mVoiceListening) R.string.listening else R.string.tap_to_speak) }
+    }
+
+    /** Scales the mic with the microphone loudness (rmsdB is roughly -2..10). */
+    fun setVoiceLevel(rmsdB: Float) {
+        if (!mVoiceListening) return
+        val scale = (1f + (rmsdB.coerceIn(0f, 10f) / 10f) * 0.4f)
+        keyboardViewBinding?.speechBarMic?.apply {
+            scaleX = scale
+            scaleY = scale
+        }
+    }
+
+    private fun startMicPulse(mic: View) {
+        stopMicPulse(mic)
+        val scaleX = ObjectAnimator.ofFloat(mic, View.SCALE_X, 1f, 1.15f, 1f)
+        val scaleY = ObjectAnimator.ofFloat(mic, View.SCALE_Y, 1f, 1.15f, 1f)
+        listOf(scaleX, scaleY).forEach {
+            it.duration = 900
+            it.repeatCount = ObjectAnimator.INFINITE
+        }
+        mVoiceMicAnimator = AnimatorSet().apply {
+            playTogether(scaleX, scaleY)
+            start()
+        }
+    }
+
+    private fun stopMicPulse(mic: View) {
+        mVoiceMicAnimator?.cancel()
+        mVoiceMicAnimator = null
+        mic.scaleX = 1f
+        mic.scaleY = 1f
     }
 
     private fun onSpaceBarLongPressed(): Boolean {
@@ -1635,28 +1869,21 @@ class MyKeyboardView @JvmOverloads constructor(
 
     private fun setupStoredClips() {
         ensureBackgroundThread {
+            val query = clipSearchQuery.trim()
+            val all = if (query.isEmpty()) context.clipsDB.getClips() else context.clipsDB.searchClips(query)
+            val pinned = all.filter { it.pinned }
+            val recent = all.filter { !it.pinned }
+
             val clips = ArrayList<ListItem>()
-            val clipboardContent = context.getCurrentClip()
-
-            val pinnedClips = context.clipsDB.getClips()
-            val isCurrentClipPinnedToo = pinnedClips.any {
-                clipboardContent?.isNotEmpty() == true && it.value.trim() == clipboardContent
+            if (pinned.isNotEmpty()) {
+                clips.add(ClipsSectionLabel(context.getString(R.string.clipboard_pinned), false))
+                clips.addAll(pinned)
+            }
+            if (recent.isNotEmpty()) {
+                clips.add(ClipsSectionLabel(context.getString(R.string.clipboard_recent), false))
+                clips.addAll(recent)
             }
 
-            if (!isCurrentClipPinnedToo && clipboardContent?.isNotEmpty() == true) {
-                val section = ClipsSectionLabel(context.getString(R.string.clipboard_current), true)
-                clips.add(section)
-
-                val clip = Clip(-1, clipboardContent)
-                clips.add(clip)
-            }
-
-            if (!isCurrentClipPinnedToo && clipboardContent?.isNotEmpty() == true) {
-                val section = ClipsSectionLabel(context.getString(R.string.clipboard_pinned), false)
-                clips.add(section)
-            }
-
-            clips.addAll(pinnedClips)
             Handler(Looper.getMainLooper()).post {
                 setupClipsAdapter(clips)
             }
@@ -1694,6 +1921,8 @@ class MyKeyboardView @JvmOverloads constructor(
             emojiPaletteHolder.background = ColorDrawable(backgroundColor)
             emojiPaletteClose.applyColorFilter(textColor)
             emojiPaletteLabel.setTextColor(textColor)
+            emojiSearch.setTextColor(textColor)
+            emojiSearch.setHintTextColor(textColor.adjustAlpha(0.5f))
 
             emojiPaletteBottomBar.background = ColorDrawable(toolbarColor)
             emojiPaletteModeChange.apply {
@@ -1737,8 +1966,11 @@ class MyKeyboardView @JvmOverloads constructor(
     }
 
     fun openEmojiPalette() {
+        emojiSearchQuery = ""
         keyboardViewBinding!!.emojiPaletteHolder.beVisible()
         keyboardViewBinding!!.suggestionsHolder.beGone()
+        keyboardViewBinding!!.emojiSearch.setText("")
+        keyboardViewBinding!!.emojiCategoriesStrip.beVisible()
         setupEmojis()
     }
 
@@ -1753,6 +1985,7 @@ class MyKeyboardView @JvmOverloads constructor(
     private fun setupEmojis() {
         ensureBackgroundThread {
             val fullEmojiList = parseRawEmojiSpecsFile(context, EMOJI_SPEC_FILE_PATH)
+            parseEmojiKeywords(context, EMOJI_KEYWORDS_FILE_PATH)
             val systemFontPaint = Paint().apply {
                 typeface = Typeface.DEFAULT
             }
@@ -1766,6 +1999,58 @@ class MyKeyboardView @JvmOverloads constructor(
                 setupEmojiAdapter(emojis)
             }
         }
+    }
+
+    /** Re-filters the emoji grid by [query]; empty query restores the full categorised list. */
+    private fun filterEmojis(query: String) {
+        emojiSearchQuery = query
+        val items = if (query.isBlank()) {
+            prepareEmojiItems(prepareEmojiCategories(loadedEmojis))
+        } else {
+            searchEmojis(loadedEmojis, query).map { EmojisAdapter.Item.Emoji(it) }
+        }
+        emojiAdapterItems = items
+        (keyboardViewBinding?.emojisList?.adapter as? EmojisAdapter)?.updateItems(items)
+        keyboardViewBinding?.emojiCategoriesStrip?.beGoneIf(query.isNotBlank())
+        keyboardViewBinding?.emojisList?.scrollToPosition(0)
+    }
+
+    private fun showEmojiVariants(emojiData: EmojiData) {
+        val variants = (listOf(emojiData.emoji) + emojiData.variants).distinct()
+        val padding = resources.getDimensionPixelSize(R.dimen.medium_margin)
+        val cell = resources.getDimensionPixelSize(R.dimen.emoji_item_size)
+
+        val row = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(padding, padding, padding, padding)
+            background = ColorDrawable(mKeyboardBackgroundColor)
+        }
+
+        val popup = PopupWindow(row, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
+            elevation = resources.getDimensionPixelSize(R.dimen.medium_margin).toFloat()
+        }
+
+        variants.forEach { variant ->
+            val tv = TextView(context).apply {
+                text = EmojiCompat.get().process(variant)
+                gravity = Gravity.CENTER
+                setTextColor(mTextColor)
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.emoji_text_size))
+                layoutParams = LinearLayout.LayoutParams(cell, cell)
+                val outValue = TypedValue()
+                context.theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
+                setBackgroundResource(outValue.resourceId)
+                setOnClickListener {
+                    mOnKeyboardActionListener?.onText(variant)
+                    vibrateIfNeeded()
+                    context.config.addRecentEmoji(variant)
+                    popup.dismiss()
+                }
+            }
+            row.addView(tv)
+        }
+
+        popup.showAtLocation(this, Gravity.CENTER, 0, 0)
     }
 
     // For Vietnamese - Telex
@@ -1796,8 +2081,9 @@ class MyKeyboardView @JvmOverloads constructor(
     }
 
     private fun setupEmojiAdapter(emojis: List<EmojiData>) {
+        loadedEmojis = emojis
         val emojiCategories = prepareEmojiCategories(emojis)
-        var emojiItems = prepareEmojiItems(emojiCategories)
+        emojiAdapterItems = prepareEmojiItems(emojiCategories)
 
         val emojiLayoutManager = AutoGridLayoutManager(
             context = context,
@@ -1805,7 +2091,7 @@ class MyKeyboardView @JvmOverloads constructor(
         ).apply {
             spanSizeLookup = object : SpanSizeLookup() {
                 override fun getSpanSize(position: Int): Int {
-                    return if (emojiItems[position] is EmojisAdapter.Item.Category) {
+                    return if (emojiAdapterItems.getOrNull(position) is EmojisAdapter.Item.Category) {
                         spanCount
                     } else {
                         1
@@ -1841,7 +2127,7 @@ class MyKeyboardView @JvmOverloads constructor(
                         applyColorFilter(mPrimaryColor)
                         keyboardViewBinding?.emojisList?.stopScroll()
                         emojiLayoutManager.scrollToPositionWithOffset(
-                            emojiItems.indexOfFirst { it is EmojisAdapter.Item.Category && it.value == category },
+                            emojiAdapterItems.indexOfFirst { it is EmojisAdapter.Item.Category && it.value == category },
                             0
                         )
                     }
@@ -1852,16 +2138,23 @@ class MyKeyboardView @JvmOverloads constructor(
 
         keyboardViewBinding?.emojisList?.apply {
             layoutManager = emojiLayoutManager
-            adapter = EmojisAdapter(context = safeStorageContext, items = emojiItems) { emoji ->
-                mOnKeyboardActionListener!!.onText(emoji.emoji)
-                vibrateIfNeeded()
+            adapter = EmojisAdapter(
+                context = safeStorageContext,
+                items = emojiAdapterItems,
+                itemClick = { emoji ->
+                    mOnKeyboardActionListener!!.onText(emoji.emoji)
+                    vibrateIfNeeded()
 
-                context.config.addRecentEmoji(emoji.emoji)
-                (adapter as? EmojisAdapter)?.apply {
-                    emojiItems = prepareEmojiItems(prepareEmojiCategories(emojis))
-                    updateItems(emojiItems)
-                }
-            }
+                    context.config.addRecentEmoji(emoji.emoji)
+                    if (emojiSearchQuery.isBlank()) {
+                        (adapter as? EmojisAdapter)?.apply {
+                            emojiAdapterItems = prepareEmojiItems(prepareEmojiCategories(loadedEmojis))
+                            updateItems(emojiAdapterItems)
+                        }
+                    }
+                },
+                itemLongClick = { emoji -> showEmojiVariants(emoji) }
+            )
 
             clearOnScrollListeners()
             onScroll { offset ->
@@ -1872,7 +2165,7 @@ class MyKeyboardView @JvmOverloads constructor(
 
                 emojiLayoutManager.findFirstCompletelyVisibleItemPosition()
                     .also { firstVisibleIndex ->
-                        emojiItems
+                        emojiAdapterItems
                             .withIndex()
                             .lastOrNull { it.value is EmojisAdapter.Item.Category && it.index <= firstVisibleIndex }
                             ?.also { activeCategory ->
@@ -1929,6 +2222,10 @@ class MyKeyboardView @JvmOverloads constructor(
     }
 
     private fun getKeyColor(): Int {
+        // Photo/gradient theme: translucent white keys so the background shows through (Gboard look).
+        if (mHasBackgroundImage) {
+            return Color.WHITE.adjustAlpha(0.18f)
+        }
         val backgroundColor = safeStorageContext.getKeyboardBackgroundColor()
         val lighterColor = backgroundColor.lightenColor()
         val keyColor = if (safeStorageContext.isDynamicTheme()) {
@@ -1954,6 +2251,8 @@ class MyKeyboardView @JvmOverloads constructor(
             } else {
                 keyboardViewBinding?.autofillSuggestionsHolder?.addView(it)
             }
+            // Autofill (e.g. password) suggestions take precedence over word predictions.
+            keyboardViewBinding?.predictionsStrip?.beGone()
             updateSuggestionsToolbarLayout()
         }
     }

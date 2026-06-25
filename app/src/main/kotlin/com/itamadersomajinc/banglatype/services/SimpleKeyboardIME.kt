@@ -34,6 +34,7 @@ import android.view.inputmethod.InlineSuggestionsRequest
 import android.view.inputmethod.InlineSuggestionsResponse
 import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputMethodSubtype
+import android.widget.Toast
 import android.widget.inline.InlinePresentationSpec
 import androidx.annotation.RequiresApi
 import androidx.autofill.inline.UiVersions
@@ -69,13 +70,24 @@ import com.itamadersomajinc.banglatype.activities.SettingsActivity
 import com.itamadersomajinc.banglatype.databinding.KeyboardViewKeyboardBinding
 import com.itamadersomajinc.banglatype.extensions.config
 import com.itamadersomajinc.banglatype.extensions.getKeyboardBackgroundColor
+import com.itamadersomajinc.banglatype.extensions.getKeyboardBackgroundDrawable
+import com.itamadersomajinc.banglatype.extensions.hasKeyboardBackgroundDrawable
+import com.itamadersomajinc.banglatype.extensions.getVoiceInputLocale
 import com.itamadersomajinc.banglatype.extensions.getKeyboardLanguageText
+import com.itamadersomajinc.banglatype.commons.extensions.toast
+import com.itamadersomajinc.banglatype.extensions.getPreferredVoiceInputMethod
 import com.itamadersomajinc.banglatype.extensions.getSelectedLanguagesSorted
 import com.itamadersomajinc.banglatype.extensions.getStrokeColor
 import com.itamadersomajinc.banglatype.extensions.safeStorageContext
 import com.itamadersomajinc.banglatype.helpers.HEIGHT_PERCENTAGE
 import com.itamadersomajinc.banglatype.helpers.KEYBOARD_LANGUAGE
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_ARABIC
+import com.itamadersomajinc.banglatype.helpers.AvroParser
+import com.itamadersomajinc.banglatype.helpers.PredictionEngine
+import com.itamadersomajinc.banglatype.commons.helpers.ensureBackgroundThread
+import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BANGLA_AVRO
+import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BANGLA_JATIYO
+import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BANGLA_PROBHAT
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BELARUSIAN_CYRL
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BELARUSIAN_LATN
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BENGALI
@@ -118,10 +130,14 @@ import com.itamadersomajinc.banglatype.helpers.LANGUAGE_TURKISH
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_TURKISH_Q
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_UKRAINIAN
 import com.itamadersomajinc.banglatype.helpers.MyKeyboard
+import com.itamadersomajinc.banglatype.helpers.VoiceInputManager
 import com.itamadersomajinc.banglatype.helpers.SHOW_KEY_BORDERS
 import com.itamadersomajinc.banglatype.helpers.SHOW_NUMBERS_ROW
 import com.itamadersomajinc.banglatype.helpers.ShiftState
 import com.itamadersomajinc.banglatype.helpers.VOICE_INPUT_METHOD
+import com.itamadersomajinc.banglatype.helpers.KEYBOARD_THEME_ID
+import com.itamadersomajinc.banglatype.helpers.KEYBOARD_BG_IMAGE_PATH
+import com.itamadersomajinc.banglatype.helpers.KEYBOARD_BG_DIM
 import com.itamadersomajinc.banglatype.helpers.cachedVNTelexData
 import com.itamadersomajinc.banglatype.interfaces.OnKeyboardActionListener
 import com.itamadersomajinc.banglatype.views.MyKeyboardView
@@ -154,7 +170,14 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
     private var switchToLetters = false
     private var breakIterator: BreakIterator? = null
 
+    // Raw Latin text typed for the in-progress word while the Avro Phonetic layout is active.
+    // It is re-parsed to Bengali on every keystroke and shown as composing text.
+    private val avroComposing = StringBuilder()
+    private val isAvro get() = baseContext.config.keyboardLanguage == LANGUAGE_BANGLA_AVRO
+
     private lateinit var binding: KeyboardViewKeyboardBinding
+
+    private var voiceInputManager: VoiceInputManager? = null
 
     override fun onInitializeInterface() {
         super.onInitializeInterface()
@@ -188,8 +211,29 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         }
     }
 
+    override fun onFinishInputView(finishingInput: Boolean) {
+        super.onFinishInputView(finishingInput)
+        voiceInputManager?.stop()
+        keyboardView?.setVoiceListening(false)
+    }
+
+    override fun onDestroy() {
+        voiceInputManager?.destroy()
+        voiceInputManager = null
+        super.onDestroy()
+    }
+
     override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
+        avroComposing.clear()
+        keyboardView?.setPredictions(emptyList())
+        if (config.showSuggestions) {
+            ensureBackgroundThread { PredictionEngine.preload(this) }
+        }
+        // Auto-select Google voice typing (or any available) so the mic works without setup.
+        if (config.voiceInputMethod.isEmpty()) {
+            ensureBackgroundThread { getPreferredVoiceInputMethod()?.let { config.voiceInputMethod = it.first.id } }
+        }
         inputTypeClass = attribute!!.inputType and TYPE_MASK_CLASS
         inputTypeClassVariation = attribute.inputType and TYPE_MASK_VARIATION
         enterKeyType = attribute.imeOptions and (IME_MASK_ACTION or IME_FLAG_NO_ENTER_ACTION)
@@ -261,8 +305,26 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             lastShiftPressTS = 0
         }
 
+        // Avro Phonetic: any key other than a letter keystroke, Shift, or Delete ends the
+        // current word, so flush the composing buffer before handling it normally.
+        val isAvroLetterKey = isAvro && keyboardMode == KEYBOARD_LETTERS && code > 0 && Character.isLetter(code.toChar())
+        if (isAvro && code != MyKeyboard.KEYCODE_SHIFT && code != MyKeyboard.KEYCODE_DELETE && !isAvroLetterKey) {
+            finishAvroComposing()
+        }
+
         when (code) {
             MyKeyboard.KEYCODE_DELETE -> {
+                if (isAvro && avroComposing.isNotEmpty()) {
+                    avroComposing.deleteCharAt(avroComposing.length - 1)
+                    if (avroComposing.isEmpty()) {
+                        inputConnection.finishComposingText()
+                    } else {
+                        inputConnection.setComposingText(AvroParser.parse(this, avroComposing.toString()), 1)
+                    }
+                    updateShiftKeyState()
+                    updateSuggestions()
+                    return
+                }
                 val selectedText = inputConnection.getSelectedText(0)
                 if (TextUtils.isEmpty(selectedText)) {
                     val count = getCountToDelete(inputConnection)
@@ -297,6 +359,7 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             }
 
             MyKeyboard.KEYCODE_ENTER -> {
+                learnLastWord()
                 val imeOptionsActionId = getImeOptionsActionId()
                 if (imeOptionsActionId != IME_ACTION_NONE) {
                     inputConnection.performEditorAction(imeOptionsActionId)
@@ -365,6 +428,17 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
                     }
                 }
 
+                // Avro Phonetic: accumulate the Latin letter into the current word and show the
+                // live Bengali transliteration as composing text. Case is preserved (e.g. S vs s)
+                // so the parser can distinguish case-sensitive phonemes.
+                if (isAvro && keyboardMode == KEYBOARD_LETTERS && Character.isLetter(codeChar)) {
+                    avroComposing.append(codeChar)
+                    inputConnection.setComposingText(AvroParser.parse(this, avroComposing.toString()), 1)
+                    updateShiftKeyState()
+                    updateSuggestions()
+                    return
+                }
+
                 // If the keyboard is set to symbols and the user presses space, we usually should switch back to the letters keyboard.
                 // However, avoid doing that in cases when the EditText for example requires numbers as the input.
                 // We can detect that by the text not changing on pressing Space.
@@ -408,6 +482,12 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
                 }
             }
         }
+
+        // A space ends the current word — learn it for future suggestions.
+        if (code == MyKeyboard.KEYCODE_SPACE) {
+            learnLastWord()
+        }
+        updateSuggestions()
     }
 
     private fun getCountToDelete(inputConnection: InputConnection): Int {
@@ -475,6 +555,52 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         }
     }
 
+    override fun onStartVoiceInput() {
+        val manager = voiceInputManager ?: VoiceInputManager(this).also { voiceInputManager = it }
+        if (!manager.isAvailable()) {
+            toast(R.string.no_app_found)
+            keyboardView?.setVoiceListening(false)
+            return
+        }
+
+        keyboardView?.setVoiceListening(true)
+        keyboardView?.setVoicePartialText("")
+        manager.start(getVoiceInputLocale(), object : VoiceInputManager.Callbacks {
+            override fun onPartialResult(text: String) {
+                keyboardView?.setVoicePartialText(text)
+            }
+
+            override fun onFinalResult(text: String) {
+                if (text.isNotBlank()) {
+                    currentInputConnection?.commitText("$text ", 1)
+                    learnLastWord()
+                    updateShiftKeyState()
+                    updateSuggestions()
+                }
+                keyboardView?.setVoiceListening(false)
+                keyboardView?.setVoicePartialText("")
+            }
+
+            override fun onRmsChanged(rmsdB: Float) {
+                keyboardView?.setVoiceLevel(rmsdB)
+            }
+
+            override fun onEndOfSpeech() {
+                keyboardView?.setVoicePartialText(getString(R.string.processing))
+            }
+
+            override fun onError(errorCode: Int) {
+                keyboardView?.setVoiceListening(false)
+                keyboardView?.setVoicePartialText("")
+            }
+        })
+    }
+
+    override fun onStopVoiceInput() {
+        voiceInputManager?.stop()
+        keyboardView?.setVoiceListening(false)
+    }
+
     private fun createNewKeyboard(): MyKeyboard {
         val keyboardXml = when (inputTypeClass) {
             TYPE_CLASS_NUMBER -> {
@@ -502,10 +628,132 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
     override fun onUpdateSelection(oldSelStart: Int, oldSelEnd: Int, newSelStart: Int, newSelEnd: Int, candidatesStart: Int, candidatesEnd: Int) {
         super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+        // If the cursor moved away from the Avro composing region (tap elsewhere, selection, etc.),
+        // commit what we have and reset so the Latin buffer never desyncs from the field.
+        if (avroComposing.isNotEmpty() && (candidatesStart < 0 || newSelStart != newSelEnd || newSelEnd != candidatesEnd)) {
+            finishAvroComposing()
+        }
         if (newSelStart == newSelEnd) {
             keyboardView?.closeClipboardManager()
+            updateSuggestions()
         }
         updateShiftKeyState()
+    }
+
+    private fun finishAvroComposing() {
+        if (avroComposing.isNotEmpty()) {
+            currentInputConnection?.finishComposingText()
+            avroComposing.clear()
+        }
+    }
+
+    // ---- Word prediction / suggestions ----
+
+    private fun isWordChar(c: Char) = c.isLetter()
+
+    /** Trailing run of word characters before the cursor (empty if the last char is a separator). */
+    private fun currentWordPrefix(s: String): String {
+        var start = s.length
+        while (start > 0 && isWordChar(s[start - 1])) start--
+        return s.substring(start)
+    }
+
+    /** Returns (word-before-last, last-word) found at the tail of [s], ignoring trailing separators. */
+    private fun lastTwoWords(s: String): Pair<String?, String> {
+        var end = s.length
+        while (end > 0 && !isWordChar(s[end - 1])) end--
+        var start = end
+        while (start > 0 && isWordChar(s[start - 1])) start--
+        val last = s.substring(start, end)
+        var pEnd = start
+        while (pEnd > 0 && !isWordChar(s[pEnd - 1])) pEnd--
+        var pStart = pEnd
+        while (pStart > 0 && isWordChar(s[pStart - 1])) pStart--
+        val prev = if (pEnd > pStart) s.substring(pStart, pEnd) else null
+        return prev to last
+    }
+
+    private fun textBeforeCursor(): String =
+        currentInputConnection?.getTextBeforeCursor(64, 0)?.toString() ?: ""
+
+    private fun updateSuggestions() {
+        val kbView = keyboardView ?: return
+        if (!config.showSuggestions || keyboardMode != KEYBOARD_LETTERS) {
+            kbView.setPredictions(emptyList())
+            return
+        }
+        val avroActive = isAvro && avroComposing.isNotEmpty()
+        val avroWord = if (avroActive) AvroParser.parse(this, avroComposing.toString()) else null
+        val before = if (avroActive) "" else textBeforeCursor()
+        ensureBackgroundThread {
+            val suggestions: List<String> = when {
+                avroWord != null -> PredictionEngine.currentWordSuggestions(this, avroWord)
+                else -> {
+                    val prefix = currentWordPrefix(before)
+                    if (prefix.isNotEmpty()) {
+                        PredictionEngine.currentWordSuggestions(this, prefix)
+                    } else {
+                        val prev = lastTwoWords(before).second
+                        if (prev.isNotEmpty()) PredictionEngine.nextWordSuggestions(this, prev) else emptyList()
+                    }
+                }
+            }
+            kbView.post { kbView.setPredictions(suggestions) }
+        }
+    }
+
+    /** Records the word that was just completed (call after committing a space/enter/punctuation). */
+    private fun learnLastWord() {
+        if (!config.showSuggestions) {
+            return
+        }
+        val (prev, last) = lastTwoWords(textBeforeCursor())
+        if (last.isNotEmpty()) {
+            ensureBackgroundThread { PredictionEngine.learn(this, prev, last) }
+        }
+    }
+
+    override fun onPredictionPicked(word: String) {
+        val inputConnection = currentInputConnection ?: return
+        val prevWord: String?
+        if (isAvro && avroComposing.isNotEmpty()) {
+            val composing = AvroParser.parse(this, avroComposing.toString())
+            val beforeNoComposing = textBeforeCursor().removeSuffix(composing)
+            prevWord = lastTwoWords(beforeNoComposing).second.ifEmpty { null }
+            inputConnection.setComposingText(word, 1)
+            inputConnection.finishComposingText()
+            avroComposing.clear()
+            inputConnection.commitText(" ", 1)
+        } else {
+            val before = textBeforeCursor()
+            val prefix = currentWordPrefix(before)
+            prevWord = lastTwoWords(before.dropLast(prefix.length)).second.ifEmpty { null }
+            if (prefix.isNotEmpty()) {
+                inputConnection.deleteSurroundingText(prefix.length, 0)
+            }
+            inputConnection.commitText("$word ", 1)
+        }
+        ensureBackgroundThread { PredictionEngine.learn(this, prevWord, word) }
+        updateShiftKeyState()
+        updateSuggestions()
+    }
+
+    override fun onSpaceSwipeLanguage(forward: Boolean) {
+        val languages = getSelectedLanguagesSorted()
+        if (languages.size < 2) {
+            return
+        }
+        val currentIndex = languages.indexOf(config.keyboardLanguage)
+        val nextIndex = if (forward) {
+            (currentIndex + 1) % languages.size
+        } else {
+            (currentIndex - 1 + languages.size) % languages.size
+        }
+        config.keyboardLanguage = languages[nextIndex]
+        finishAvroComposing()
+        keyboardView?.setPredictions(emptyList())
+        reloadKeyboard()
+        toast(getKeyboardLanguageText(config.keyboardLanguage), Toast.LENGTH_SHORT)
     }
 
     override fun onUpdateCursorAnchorInfo(cursorAnchorInfo: CursorAnchorInfo?) {
@@ -541,6 +789,9 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
     private fun getKeyboardLayoutXML(): Int {
         return when (baseContext.config.keyboardLanguage) {
             LANGUAGE_ARABIC -> R.xml.keys_letters_arabic
+            LANGUAGE_BANGLA_AVRO -> R.xml.keys_letters_english_qwerty
+            LANGUAGE_BANGLA_JATIYO -> R.xml.keys_letters_bangla_jatiyo
+            LANGUAGE_BANGLA_PROBHAT -> R.xml.keys_letters_bangla_probhat
             LANGUAGE_BELARUSIAN_CYRL -> R.xml.keys_letters_belarusian_cyrl
             LANGUAGE_BELARUSIAN_LATN -> R.xml.keys_letters_belarusian_latn
             LANGUAGE_BENGALI -> R.xml.keys_letters_bengali
@@ -642,7 +893,8 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         if (key != null && key in arrayOf(
                 SHOW_KEY_BORDERS, KEYBOARD_LANGUAGE, HEIGHT_PERCENTAGE, SHOW_NUMBERS_ROW, VOICE_INPUT_METHOD,
                 TEXT_COLOR, BACKGROUND_COLOR, PRIMARY_COLOR, ACCENT_COLOR, CUSTOM_TEXT_COLOR, CUSTOM_BACKGROUND_COLOR,
-                CUSTOM_PRIMARY_COLOR, CUSTOM_ACCENT_COLOR, IS_GLOBAL_THEME_ENABLED, IS_SYSTEM_THEME_ENABLED
+                CUSTOM_PRIMARY_COLOR, CUSTOM_ACCENT_COLOR, IS_GLOBAL_THEME_ENABLED, IS_SYSTEM_THEME_ENABLED,
+                KEYBOARD_THEME_ID, KEYBOARD_BG_IMAGE_PATH, KEYBOARD_BG_DIM
             )
         ) {
             if (::binding.isInitialized) {
@@ -665,7 +917,18 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
     private fun updateBackgroundColors() {
         val backgroundColor = safeStorageContext.getKeyboardBackgroundColor()
-        binding.keyboardHolder.setBackgroundColor(backgroundColor)
+        val holder = binding.keyboardHolder
+        // Photo/gradient theme: paint the image across the whole keyboard (toolbar + keys) area.
+        val bgDrawable = if (safeStorageContext.hasKeyboardBackgroundDrawable()) {
+            safeStorageContext.getKeyboardBackgroundDrawable(holder.width, holder.height)
+        } else {
+            null
+        }
+        if (bgDrawable != null) {
+            holder.background = bgDrawable
+        } else {
+            holder.setBackgroundColor(backgroundColor)
+        }
         window.window?.setSystemBarsAppearance(backgroundColor)
     }
 
