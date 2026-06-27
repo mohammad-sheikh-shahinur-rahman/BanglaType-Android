@@ -34,6 +34,24 @@ interface OnKeyboardActionListener {
     fun moveCursorRight()
 
     /**
+     * Called when the user swipes left from the Backspace key to delete the previous word.
+     */
+    fun onDeleteWord()
+
+    /**
+     * Called from the text-editing panel to move the cursor with a D-pad key.
+     * @param keyCode one of KeyEvent.KEYCODE_DPAD_LEFT/RIGHT/UP/DOWN
+     * @param withShift true to extend the selection (Select mode) instead of just moving
+     */
+    fun onEditCursorMove(keyCode: Int, withShift: Boolean)
+
+    /**
+     * Called from the text-editing panel to run a context-menu action on the field.
+     * @param menuActionId one of android.R.id.selectAll / cut / copy / paste
+     */
+    fun onEditContextAction(menuActionId: Int)
+
+    /**
      * Sends a sequence of characters to the listener.
      * @param text the string to be displayed.
      */
@@ -69,4 +87,11 @@ interface OnKeyboardActionListener {
      * Called to stop an in-progress in-app voice typing session.
      */
     fun onStopVoiceInput()
+
+    /**
+     * Called from the one-handed side controls to switch the active side (left ↔ right) or to
+     * leave one-handed mode entirely.
+     * @param mode one of ONE_HANDED_OFF / ONE_HANDED_LEFT / ONE_HANDED_RIGHT
+     */
+    fun onOneHandedModeChanged(mode: Int)
 }

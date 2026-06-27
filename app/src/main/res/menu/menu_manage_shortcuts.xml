@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="AppCompatResource">
+    <item
+        android:id="@+id/add_shortcut_item"
+        android:icon="@drawable/ic_plus_vector"
+        android:title="@string/add_new_item"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/import_shortcuts"
+        android:showAsAction="never"
+        android:title="@string/import_shortcuts"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/export_shortcuts"
+        android:showAsAction="never"
+        android:title="@string/export_shortcuts"
+        app:showAsAction="never" />
+</menu>

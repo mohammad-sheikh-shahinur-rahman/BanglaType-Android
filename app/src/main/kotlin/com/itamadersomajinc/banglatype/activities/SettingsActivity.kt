@@ -1,11 +1,12 @@
 package com.itamadersomajinc.banglatype.activities
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import androidx.annotation.RequiresApi
 import com.itamadersomajinc.banglatype.commons.dialogs.RadioGroupDialog
 import com.itamadersomajinc.banglatype.commons.extensions.beVisibleIf
 import com.itamadersomajinc.banglatype.commons.extensions.getProperPrimaryColor
-import com.itamadersomajinc.banglatype.commons.extensions.toast
 import com.itamadersomajinc.banglatype.commons.extensions.updateTextColors
 import com.itamadersomajinc.banglatype.commons.extensions.viewBinding
 import com.itamadersomajinc.banglatype.commons.helpers.NavigationIcon
@@ -13,6 +14,7 @@ import com.itamadersomajinc.banglatype.commons.helpers.isTiramisuPlus
 import com.itamadersomajinc.banglatype.commons.models.RadioItem
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.databinding.ActivitySettingsBinding
+import com.itamadersomajinc.banglatype.dialogs.AboutDialog
 import com.itamadersomajinc.banglatype.dialogs.ManageKeyboardLanguagesDialog
 import com.itamadersomajinc.banglatype.extensions.config
 import com.itamadersomajinc.banglatype.extensions.getCurrentVoiceInputMethod
@@ -32,6 +34,16 @@ import com.itamadersomajinc.banglatype.helpers.KEYBOARD_HEIGHT_90_PERCENT
 import com.itamadersomajinc.banglatype.helpers.SOUND_ALWAYS
 import com.itamadersomajinc.banglatype.helpers.SOUND_NONE
 import com.itamadersomajinc.banglatype.helpers.SOUND_SYSTEM
+import com.itamadersomajinc.banglatype.helpers.SOUND_VOLUME_HIGH
+import com.itamadersomajinc.banglatype.helpers.SOUND_VOLUME_LOW
+import com.itamadersomajinc.banglatype.helpers.SOUND_VOLUME_MEDIUM
+import com.itamadersomajinc.banglatype.helpers.VIBRATION_LIGHT
+import com.itamadersomajinc.banglatype.helpers.VIBRATION_MEDIUM
+import com.itamadersomajinc.banglatype.helpers.VIBRATION_STRONG
+import com.itamadersomajinc.banglatype.helpers.VIBRATION_SYSTEM
+import com.itamadersomajinc.banglatype.helpers.ONE_HANDED_LEFT
+import com.itamadersomajinc.banglatype.helpers.ONE_HANDED_OFF
+import com.itamadersomajinc.banglatype.helpers.ONE_HANDED_RIGHT
 import java.util.Locale
 import kotlin.system.exitProcess
 
@@ -48,6 +60,7 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onResume() {
         super.onResume()
         setupTopAppBar(binding.settingsAppbar, NavigationIcon.Arrow)
@@ -56,20 +69,31 @@ class SettingsActivity : SimpleActivity() {
         setupKeyboardTheme()
         setupUseEnglish()
         setupLanguage()
-        setupManageClipboardItems()
+        // setupManageClipboardItems() - Removed from this version of UI for now or handled differently
         setupVibrateOnKeypress()
+        // setupVibrationStrength()
         setupSoundOnKeypress()
+        // setupSoundVolume()
         setupShowPopupOnKeypress()
         setupShowKeyBorders()
         setupManageKeyboardLanguages()
         setupKeyboardLanguage()
         setupKeyboardHeightMultiplier()
-        setupShowEmojiKey()
-        setupShowLanguageSwitchKey()
-        setupShowClipboardContent()
-        setupSentencesCapitalization()
+        // setupOneHandedMode()
+        // setupShowEmojiKey()
+        // setupShowLanguageSwitchKey()
+        // setupShowClipboardContent()
+        // setupSentencesCapitalization()
+        setupAutoPunctuation()
         setupShowNumbersRow()
-        setupVoiceInputMethod()
+        // setupEnableShortcuts()
+        // setupSpaceSwipeCursorControl()
+        // setupSwipeDeleteWord()
+        // setupManageShortcuts()
+        // setupVoiceInputMethod()
+        setupContinuousVoiceTyping()
+        setupVoiceTypingPunctuation()
+        setupSupport()
 
         binding.apply {
             updateTextColors(settingsNestedScrollview)
@@ -80,9 +104,32 @@ class SettingsActivity : SimpleActivity() {
                 settingsLayoutAppearanceLabel,
                 settingsKeypressLabel,
                 settingsTypingInputLabel,
-                settingsClipboardSettingsLabel
+                settingsSupportLabel
             ).forEach {
                 it.setTextColor(getProperPrimaryColor())
+            }
+
+            arrayOf(
+                settingsColorCustomizationIcon,
+                settingsKeyboardThemeIcon
+            ).forEach {
+                it.setColorFilter(getProperPrimaryColor())
+            }
+        }
+    }
+
+    private fun setupSupport() {
+        binding.apply {
+            settingsManualHolder.setOnClickListener {
+                startActivity(Intent(this@SettingsActivity, ManualActivity::class.java))
+            }
+
+            settingsPrivacyPolicyHolder.setOnClickListener {
+                startActivity(Intent(this@SettingsActivity, PrivacyPolicyActivity::class.java))
+            }
+
+            settingsAboutHolder.setOnClickListener {
+                AboutDialog(this@SettingsActivity, "1.0.0")
             }
         }
     }
@@ -121,6 +168,7 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun setupLanguage() {
         binding.apply {
             settingsLanguage.text = Locale.getDefault().displayLanguage
@@ -131,6 +179,7 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
+    /*
     private fun setupManageClipboardItems() {
         binding.settingsManageClipboardItemsHolder.setOnClickListener {
             Intent(this, ManageClipboardItemsActivity::class.java).apply {
@@ -138,6 +187,45 @@ class SettingsActivity : SimpleActivity() {
             }
         }
     }
+
+    private fun setupEnableShortcuts() {
+        binding.apply {
+            settingsEnableShortcuts.isChecked = config.enableShortcuts
+            settingsEnableShortcutsHolder.setOnClickListener {
+                settingsEnableShortcuts.toggle()
+                config.enableShortcuts = settingsEnableShortcuts.isChecked
+            }
+        }
+    }
+
+    private fun setupSpaceSwipeCursorControl() {
+        binding.apply {
+            settingsSpaceSwipeCursorControl.isChecked = config.spaceSwipeCursorControl
+            settingsSpaceSwipeCursorControlHolder.setOnClickListener {
+                settingsSpaceSwipeCursorControl.toggle()
+                config.spaceSwipeCursorControl = settingsSpaceSwipeCursorControl.isChecked
+            }
+        }
+    }
+
+    private fun setupSwipeDeleteWord() {
+        binding.apply {
+            settingsSwipeDeleteWord.isChecked = config.swipeDeleteWord
+            settingsSwipeDeleteWordHolder.setOnClickListener {
+                settingsSwipeDeleteWord.toggle()
+                config.swipeDeleteWord = settingsSwipeDeleteWord.isChecked
+            }
+        }
+    }
+
+    private fun setupManageShortcuts() {
+        binding.settingsManageShortcutsHolder.setOnClickListener {
+            Intent(this, ManageShortcutsActivity::class.java).apply {
+                startActivity(this)
+            }
+        }
+    }
+    */
 
     private fun setupVibrateOnKeypress() {
         binding.apply {
@@ -175,6 +263,89 @@ class SettingsActivity : SimpleActivity() {
             SOUND_SYSTEM -> R.string.sound_system
             SOUND_ALWAYS -> R.string.sound_always
             else -> R.string.sound_none
+        }
+    )
+
+    /*
+    private fun setupVibrationStrength() {
+        binding.apply {
+            settingsVibrationStrength.text = getVibrationStrengthText(config.vibrationStrength)
+            settingsVibrationStrengthHolder.setOnClickListener {
+                val items = arrayListOf(
+                    RadioItem(VIBRATION_SYSTEM, getString(R.string.vibration_default)),
+                    RadioItem(VIBRATION_LIGHT, getString(R.string.vibration_light)),
+                    RadioItem(VIBRATION_MEDIUM, getString(R.string.vibration_medium)),
+                    RadioItem(VIBRATION_STRONG, getString(R.string.vibration_strong))
+                )
+                RadioGroupDialog(this@SettingsActivity, items, config.vibrationStrength) {
+                    config.vibrationStrength = it as Int
+                    settingsVibrationStrength.text = getVibrationStrengthText(config.vibrationStrength)
+                }
+            }
+        }
+    }
+    */
+
+    private fun getVibrationStrengthText(strength: Int): String = getString(
+        when (strength) {
+            VIBRATION_LIGHT -> R.string.vibration_light
+            VIBRATION_MEDIUM -> R.string.vibration_medium
+            VIBRATION_STRONG -> R.string.vibration_strong
+            else -> R.string.vibration_default
+        }
+    )
+
+    /*
+    private fun setupSoundVolume() {
+        binding.apply {
+            settingsSoundVolume.text = getSoundVolumeText(config.keypressSoundVolume)
+            settingsSoundVolumeHolder.setOnClickListener {
+                val items = arrayListOf(
+                    RadioItem(SOUND_VOLUME_LOW, getString(R.string.volume_low)),
+                    RadioItem(SOUND_VOLUME_MEDIUM, getString(R.string.volume_medium)),
+                    RadioItem(SOUND_VOLUME_HIGH, getString(R.string.volume_high))
+                )
+                RadioGroupDialog(this@SettingsActivity, items, config.keypressSoundVolume) {
+                    config.keypressSoundVolume = it as Int
+                    settingsSoundVolume.text = getSoundVolumeText(config.keypressSoundVolume)
+                }
+            }
+        }
+    }
+    */
+
+    private fun getSoundVolumeText(volume: Int): String = getString(
+        when {
+            volume <= SOUND_VOLUME_LOW -> R.string.volume_low
+            volume <= SOUND_VOLUME_MEDIUM -> R.string.volume_medium
+            else -> R.string.volume_high
+        }
+    )
+
+    /*
+    private fun setupOneHandedMode() {
+        binding.apply {
+            settingsOneHandedMode.text = getOneHandedModeText(config.oneHandedMode)
+            settingsOneHandedModeHolder.setOnClickListener {
+                val items = arrayListOf(
+                    RadioItem(ONE_HANDED_OFF, getString(R.string.one_handed_off)),
+                    RadioItem(ONE_HANDED_LEFT, getString(R.string.one_handed_left)),
+                    RadioItem(ONE_HANDED_RIGHT, getString(R.string.one_handed_right))
+                )
+                RadioGroupDialog(this@SettingsActivity, items, config.oneHandedMode) {
+                    config.oneHandedMode = it as Int
+                    settingsOneHandedMode.text = getOneHandedModeText(config.oneHandedMode)
+                }
+            }
+        }
+    }
+    */
+
+    private fun getOneHandedModeText(mode: Int): String = getString(
+        when (mode) {
+            ONE_HANDED_LEFT -> R.string.one_handed_left
+            ONE_HANDED_RIGHT -> R.string.one_handed_right
+            else -> R.string.one_handed_off
         }
     )
 
@@ -269,6 +440,7 @@ class SettingsActivity : SimpleActivity() {
     private fun getKeyboardHeightPercentageText(keyboardHeightPercentage: Int): String =
         "$keyboardHeightPercentage%"
 
+    /*
     private fun setupShowClipboardContent() {
         binding.apply {
             settingsShowClipboardContent.isChecked = config.showClipboardContent
@@ -300,7 +472,19 @@ class SettingsActivity : SimpleActivity() {
             }
         }
     }
+    */
 
+    private fun setupAutoPunctuation() {
+        binding.apply {
+            settingsAutoPunctuation.isChecked = config.autoPunctuation
+            settingsAutoPunctuationHolder.setOnClickListener {
+                settingsAutoPunctuation.toggle()
+                config.autoPunctuation = settingsAutoPunctuation.isChecked
+            }
+        }
+    }
+
+    /*
     private fun setupShowEmojiKey() {
         binding.apply {
             settingsShowEmojiKeyHolder.setOnClickListener {
@@ -328,6 +512,7 @@ class SettingsActivity : SimpleActivity() {
             settingsShowLanguageSwitchKey.isChecked = config.showLanguageSwitchKey
         }
     }
+    */
 
     private fun setupShowNumbersRow() {
         binding.apply {
@@ -339,6 +524,7 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
+    /*
     private fun setupVoiceInputMethod() {
         binding.apply {
             settingsVoiceInputMethodValue.text =
@@ -361,6 +547,27 @@ class SettingsActivity : SimpleActivity() {
                         getCurrentVoiceInputMethod(inputMethods)?.first?.loadLabel(packageManager)
                             ?: getString(R.string.none)
                 }
+            }
+        }
+    }
+    */
+
+    private fun setupContinuousVoiceTyping() {
+        binding.apply {
+            settingsContinuousVoiceTyping.isChecked = config.continuousVoiceTyping
+            settingsContinuousVoiceTypingHolder.setOnClickListener {
+                settingsContinuousVoiceTyping.toggle()
+                config.continuousVoiceTyping = settingsContinuousVoiceTyping.isChecked
+            }
+        }
+    }
+
+    private fun setupVoiceTypingPunctuation() {
+        binding.apply {
+            settingsVoiceTypingPunctuation.isChecked = config.voiceTypingPunctuation
+            settingsVoiceTypingPunctuationHolder.setOnClickListener {
+                settingsVoiceTypingPunctuation.toggle()
+                config.voiceTypingPunctuation = settingsVoiceTypingPunctuation.isChecked
             }
         }
     }

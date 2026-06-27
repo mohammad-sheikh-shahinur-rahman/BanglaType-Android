@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Circular logo for the Android 12+ system splash. The OS clips this to a
+     circle and centers it on the white icon background, matching the in-app
+     white-bordered circular logo. The inset keeps the logo off the edge. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/logo_banglatype"
+    android:inset="16%" />

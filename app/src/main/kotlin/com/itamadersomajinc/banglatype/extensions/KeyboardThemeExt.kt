@@ -8,15 +8,19 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
-import com.itamadersomajinc.banglatype.commons.extensions.baseConfig
+import com.itamadersomajinc.banglatype.commons.extensions.adjustAlpha
 import com.itamadersomajinc.banglatype.commons.extensions.darkenColor
+import com.itamadersomajinc.banglatype.commons.extensions.getContrastColor
 import com.itamadersomajinc.banglatype.commons.extensions.getProperBackgroundColor
+import com.itamadersomajinc.banglatype.commons.extensions.getProperPrimaryColor
+import com.itamadersomajinc.banglatype.commons.extensions.getProperTextColor
 import com.itamadersomajinc.banglatype.commons.extensions.isDynamicTheme
 import com.itamadersomajinc.banglatype.commons.extensions.isSystemInDarkMode
 import com.itamadersomajinc.banglatype.commons.extensions.lightenColor
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.helpers.KEYBOARD_BG_IMAGE_FILE
 import com.itamadersomajinc.banglatype.helpers.KEYBOARD_THEME_CUSTOM_PHOTO
+import com.itamadersomajinc.banglatype.helpers.KEYBOARD_THEME_DEFAULT
 import com.itamadersomajinc.banglatype.helpers.KeyboardTheme
 import com.itamadersomajinc.banglatype.helpers.KeyboardThemeType
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_ARABIC
@@ -28,11 +32,28 @@ import com.itamadersomajinc.banglatype.helpers.LANGUAGE_RUSSIAN
 import com.itamadersomajinc.banglatype.helpers.keyboardThemeById
 import java.io.File
 
+// ---- Keyboard-only colors ----
+// These intentionally do NOT read the app theme when a custom keyboard theme is selected, so that
+// changing the keyboard theme never recolors the rest of the app. When the "default" theme is
+// active the keyboard falls back to the app theme (its original behaviour).
+
+/** True when the user picked a keyboard theme other than "default" (which follows the app theme). */
+fun Context.isKeyboardThemeCustom(): Boolean = config.keyboardThemeId != KEYBOARD_THEME_DEFAULT
+
+fun Context.getKeyboardTextColor(): Int =
+    if (isKeyboardThemeCustom()) config.keyboardTextColor else getProperTextColor()
+
+fun Context.getKeyboardBaseColor(): Int =
+    if (isKeyboardThemeCustom()) config.keyboardColor else getProperBackgroundColor()
+
+fun Context.getKeyboardAccentColor(): Int =
+    if (isKeyboardThemeCustom()) config.keyboardPrimaryColor else getProperPrimaryColor()
+
 fun Context.getKeyboardBackgroundColor(): Int {
-    val color = if (isDynamicTheme()) {
-        resources.getColor(R.color.you_keyboard_background_color, theme)
-    } else {
-        getProperBackgroundColor().darkenColor(2)
+    val color = when {
+        isKeyboardThemeCustom() -> config.keyboardColor.darkenColor(2)
+        isDynamicTheme() -> resources.getColor(R.color.you_keyboard_background_color, theme)
+        else -> getProperBackgroundColor().darkenColor(2)
     }
 
     // use darker background color when key borders are enabled
@@ -49,6 +70,14 @@ fun Context.getKeyboardBackgroundColor(): Int {
 }
 
 fun Context.getStrokeColor(): Int {
+    if (isKeyboardThemeCustom()) {
+        val lighter = config.keyboardColor.lightenColor()
+        return if (lighter == Color.WHITE || lighter == Color.BLACK) {
+            resources.getColor(R.color.divider_grey, theme)
+        } else {
+            lighter
+        }
+    }
     return if (isDynamicTheme()) {
         if (isSystemInDarkMode()) {
             resources.getColor(R.color.md_grey_800, theme)
@@ -62,6 +91,27 @@ fun Context.getStrokeColor(): Int {
         } else {
             lighterColor
         }
+    }
+}
+
+/** Colour of the individual keys; [hasImage] true when a photo/gradient sits behind them. */
+fun Context.getKeyboardKeyColor(hasImage: Boolean): Int {
+    if (isKeyboardThemeCustom()) {
+        val base = config.keyboardColor
+        val contrast = if (hasImage) Color.WHITE else base.getContrastColor()
+        val maxAlpha = if (hasImage) 0.30f else 0.55f
+        val opacity = (config.keyboardKeyOpacity.coerceIn(0, 100) / 100f) * maxAlpha
+        return contrast.adjustAlpha(opacity)
+    }
+
+    val backgroundColor = getKeyboardBackgroundColor()
+    val lighterColor = backgroundColor.lightenColor()
+    return if (isDynamicTheme()) {
+        lighterColor
+    } else if (backgroundColor == Color.BLACK) {
+        backgroundColor.getContrastColor().adjustAlpha(0.1f)
+    } else {
+        lighterColor
     }
 }
 
@@ -125,18 +175,18 @@ private fun decodeScaledBitmap(file: File, reqWidth: Int, reqHeight: Int): andro
 }
 
 /**
- * Applies a built-in preset: writes the theme colors through the existing color pipeline and clears
- * any custom photo. Disables the dynamic/system theme so the preset colors take effect.
+ * Applies a built-in preset to the KEYBOARD ONLY: stores the theme colors in the keyboard-specific
+ * prefs (never the app theme) and clears any custom photo.
  */
 fun Context.applyKeyboardTheme(theme: KeyboardTheme) {
-    val ctx = safeStorageContext
-    ctx.baseConfig.isSystemThemeEnabled = false
-    ctx.baseConfig.textColor = theme.textColor
-    ctx.baseConfig.backgroundColor = theme.backgroundColor
-    ctx.baseConfig.primaryColor = theme.primaryColor
-    ctx.baseConfig.accentColor = theme.primaryColor
-    ctx.config.keyboardBackgroundImagePath = ""
-    ctx.config.keyboardThemeId = theme.id
+    val cfg = safeStorageContext.config
+    cfg.keyboardBackgroundImagePath = ""
+    cfg.keyboardThemeId = theme.id
+    if (theme.id != KEYBOARD_THEME_DEFAULT) {
+        cfg.keyboardTextColor = theme.textColor
+        cfg.keyboardColor = theme.backgroundColor
+        cfg.keyboardPrimaryColor = theme.primaryColor
+    }
 }
 
 /** Maps the active keyboard layout language to a BCP-47 tag for speech recognition. */

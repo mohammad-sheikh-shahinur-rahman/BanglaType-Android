@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!-- Row 1: 12 keys (approx 8.33% each) -->
+    <Row>
+        <Key
+            app:keyEdgeFlags="left"
+            app:keyLabel="দ"
+            app:keyWidth="8.33%p"
+            app:popupCharacters="ধ ১ 1"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ধ"
+            app:topSmallNumber="১" />
+        <Key
+            app:keyLabel="ূ"
+            app:keyWidth="8.33%p"
+            app:popupCharacters="ঊ ২ 2 ৄ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঊ"
+            app:topSmallNumber="২" />
+        <Key
+            app:keyLabel="ী"
+            app:keyWidth="8.33%p"
+            app:popupCharacters="ঈ ৩ 3"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঈ"
+            app:topSmallNumber="৩" />
+        <Key
+            app:keyLabel="র"
+            app:keyWidth="8.33%p"
+            app:popupCharacters="ড় ৪ 4 র্ ্র র‍্য ৰ ৱ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ড়"
+            app:topSmallNumber="৪" />
+        <Key
+            app:keyLabel="ট"
+            app:keyWidth="8.33%p"
+            app:popupCharacters="ঠ ৫ 5 ৳"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঠ"
+            app:topSmallNumber="৫" />
+        <Key
+            app:keyLabel="এ"
+            app:keyWidth="8.33%p"
+            app:popupCharacters="ঐ ৬ 6 ঞ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঐ"
+            app:topSmallNumber="৬" />
+        <Key
+            app:keyLabel="ু"
+            app:keyWidth="8.33%p"
+            app:popupCharacters="উ ৭ 7 ৎ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="উ"
+            app:topSmallNumber="৭" />
+        <Key
+            app:keyLabel="ি"
+            app:keyWidth="8.33%p"
+            app:popupCharacters="ই ৮ 8"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ই"
+            app:topSmallNumber="৮" />
+        <Key
+            app:keyLabel="ও"
+            app:keyWidth="8.33%p"
+            app:popupCharacters="ঔ ৯ 9"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঔ"
+            app:topSmallNumber="৯" />
+        <Key
+            app:keyLabel="প"
+            app:keyWidth="8.33%p"
+            app:popupCharacters="ফ ০ 0"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ফ"
+            app:topSmallNumber="০" />
+        <Key
+            app:keyLabel="ে"
+            app:keyWidth="8.33%p"
+            app:popupCharacters="ৈ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ৈ" />
+        <Key
+            app:keyEdgeFlags="right"
+            app:keyLabel="ো"
+            app:keyWidth="8.37%p"
+            app:popupCharacters="ৌ ৗ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ৌ" />
+    </Row>
+
+    <!-- Row 2: 9 keys (approx 11.11% each) -->
+    <Row>
+        <Key
+            app:keyEdgeFlags="left"
+            app:keyLabel="া"
+            app:keyWidth="11.11%p"
+            app:popupCharacters="অ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="অ" />
+        <Key
+            app:keyLabel="স"
+            app:keyWidth="11.11%p"
+            app:popupCharacters="ষ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ষ" />
+        <Key
+            app:keyLabel="ড"
+            app:keyWidth="11.11%p"
+            app:popupCharacters="ঢ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঢ" />
+        <Key
+            app:keyLabel="ত"
+            app:keyWidth="11.11%p"
+            app:popupCharacters="থ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="থ" />
+        <Key
+            app:keyLabel="গ"
+            app:keyWidth="11.11%p"
+            app:popupCharacters="ঘ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঘ" />
+        <Key
+            app:keyLabel="হ"
+            app:keyWidth="11.11%p"
+            app:popupCharacters="ঃ ঽ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঃ" />
+        <Key
+            app:keyLabel="জ"
+            app:keyWidth="11.11%p"
+            app:popupCharacters="ঝ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঝ" />
+        <Key
+            app:keyLabel="ক"
+            app:keyWidth="11.11%p"
+            app:popupCharacters="খ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="খ" />
+        <Key
+            app:keyEdgeFlags="right"
+            app:keyLabel="ল"
+            app:keyWidth="11.12%p"
+            app:popupCharacters="ং ঌ ৡ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ং" />
+    </Row>
+
+    <!-- Row 3: 11 keys (Shift/Backspace 14%, others 8%) -->
+    <Row>
+        <Key
+            app:code="-1"
+            app:keyEdgeFlags="left"
+            app:keyIcon="@drawable/ic_caps_outline_vector"
+            app:keyWidth="14%p" />
+        <Key
+            app:keyLabel="য়"
+            app:keyWidth="8%p"
+            app:popupCharacters="্য য র‍্য"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="য" />
+        <Key
+            app:keyLabel="শ"
+            app:keyWidth="8%p"
+            app:popupCharacters="ঢ়"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঢ়" />
+        <Key
+            app:keyLabel="চ"
+            app:keyWidth="8%p"
+            app:popupCharacters="ছ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ছ" />
+        <Key
+            app:keyLabel="আ"
+            app:keyWidth="8%p"
+            app:popupCharacters="ঋ ৠ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঋ" />
+        <Key
+            app:keyLabel="ব"
+            app:keyWidth="8%p"
+            app:popupCharacters="ভ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ভ" />
+        <Key
+            app:keyLabel="ন"
+            app:keyWidth="8%p"
+            app:popupCharacters="ণ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ণ" />
+        <Key
+            app:keyLabel="ম"
+            app:keyWidth="8%p"
+            app:popupCharacters="ঙ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঙ" />
+        <Key
+            app:keyLabel="ৃ"
+            app:keyWidth="8%p"
+            app:popupCharacters="ৄ"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ৃ" />
+        <Key
+            app:keyLabel="্"
+            app:keyWidth="8%p"
+            app:popupCharacters="ঁ ৺"
+            app:popupKeyboard="@xml/keyboard_popup_template"
+            app:shiftedKeyLabel="ঁ" />
+        <Key
+            app:code="-5"
+            app:isRepeatable="true"
+            app:keyEdgeFlags="right"
+            app:keyIcon="@drawable/ic_clear_vector"
+            app:keyWidth="14%p" />
+    </Row>
+
+    <!-- Row 4: Navigation and Action -->
+    <Row>
+        <Key
+            app:code="-2"
+            app:keyEdgeFlags="left"
+            app:keyLabel="\?123"
+            app:keyWidth="15%p" />
+        <Key
+            app:code="-6"
+            app:keyIcon="@drawable/ic_language_outlined"
+            app:keyWidth="10%p" />
+        <Key
+            app:keyLabel=","
+            app:keyWidth="10%p"
+            app:popupCharacters="&lt; ৲"
+            app:popupKeyboard="@xml/keyboard_popup_template" />
+        <Key
+            app:code="32"
+            app:isRepeatable="true"
+            app:keyWidth="30%p" />
+        <Key
+            app:keyLabel="।"
+            app:keyWidth="10%p"
+            app:popupCharacters=". । ॥"
+            app:popupKeyboard="@xml/keyboard_popup_template" />
+        <Key
+            app:code="-7"
+            app:keyIcon="@drawable/ic_emoji_emotions_outline_vector"
+            app:keyWidth="10%p" />
+        <Key
+            app:code="-4"
+            app:keyEdgeFlags="right"
+            app:keyIcon="@drawable/ic_enter_vector"
+            app:keyWidth="15%p" />
+    </Row>
+</Keyboard>

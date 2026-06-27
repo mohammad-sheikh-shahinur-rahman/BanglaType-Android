@@ -101,6 +101,58 @@ val builtInKeyboardThemes: List<KeyboardTheme> = listOf(
         backgroundColor = rgb(0x4A148C),
         primaryColor = rgb(0xEA80FC),
         gradientColors = intArrayOf(rgb(0x654EA3), rgb(0xEAAFC8))
+    ),
+    KeyboardTheme(
+        id = "brand_blue",
+        nameResId = R.string.theme_brand_blue,
+        type = KeyboardThemeType.GRADIENT,
+        textColor = rgb(0xFFFFFF),
+        backgroundColor = rgb(0x0078F8),
+        primaryColor = rgb(0x80C0F0),
+        gradientColors = intArrayOf(rgb(0x0078F8), rgb(0x002040))
+    ),
+    KeyboardTheme(
+        id = "lush_purple",
+        nameResId = R.string.theme_lush_purple,
+        type = KeyboardThemeType.GRADIENT,
+        textColor = rgb(0xFFFFFF),
+        backgroundColor = rgb(0x4B0082),
+        primaryColor = rgb(0xE0B0FF),
+        gradientColors = intArrayOf(rgb(0x6A0DAD), rgb(0xB19CD9))
+    ),
+    KeyboardTheme(
+        id = "neon_night",
+        nameResId = R.string.theme_neon_night,
+        type = KeyboardThemeType.GRADIENT,
+        textColor = rgb(0x00FF00),
+        backgroundColor = rgb(0x000000),
+        primaryColor = rgb(0xFF00FF),
+        gradientColors = intArrayOf(rgb(0x000000), rgb(0x1A1A1A))
+    ),
+    KeyboardTheme(
+        id = "soft_sand",
+        nameResId = R.string.theme_soft_sand,
+        type = KeyboardThemeType.COLOR,
+        textColor = rgb(0x5D4037),
+        backgroundColor = rgb(0xF5F5DC),
+        primaryColor = rgb(0xD2B48C)
+    ),
+    KeyboardTheme(
+        id = "deep_space",
+        nameResId = R.string.theme_deep_space,
+        type = KeyboardThemeType.GRADIENT,
+        textColor = rgb(0xE0E0E0),
+        backgroundColor = rgb(0x0D0D0D),
+        primaryColor = rgb(0x00BFFF),
+        gradientColors = intArrayOf(rgb(0x000000), rgb(0x434343))
+    ),
+    KeyboardTheme(
+        id = "minty_fresh",
+        nameResId = R.string.theme_minty_fresh,
+        type = KeyboardThemeType.COLOR,
+        textColor = rgb(0x004D40),
+        backgroundColor = rgb(0xE0F2F1),
+        primaryColor = rgb(0x4DB6AC)
     )
 )
 

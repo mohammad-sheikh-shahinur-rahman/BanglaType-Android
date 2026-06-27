@@ -20,4 +20,19 @@
         <item name="android:buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
         <item name="android:buttonBarNeutralButtonStyle">@style/DialogButtonStyle</item>
     </style>
+
+    <style name="CircleImage" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- Single, seamless splash. Window background matches the SplashActivity's
+         gradient so there is no blank flash before the activity draws (pre-12).
+         On Android 12+, values-v31/styles.xml additionally tunes the system splash. -->
+    <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
 </resources>

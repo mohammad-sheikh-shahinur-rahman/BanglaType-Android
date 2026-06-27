@@ -5,6 +5,9 @@ import android.content.Context
 import com.itamadersomajinc.banglatype.commons.models.RadioItem
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_ARABIC
+import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BANGLA_AVRO
+import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BANGLA_JATIYO
+import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BANGLA_PROBHAT
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BELARUSIAN_CYRL
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BELARUSIAN_LATN
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BENGALI
@@ -48,6 +51,32 @@ import com.itamadersomajinc.banglatype.helpers.LANGUAGE_TURKISH_Q
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_UKRAINIAN
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_VIETNAMESE_TELEX
 
+/**
+ * Bangla script layouts use Shift to switch to a second character layer (the "shifted" keycaps),
+ * not to capitalize. Sentence-start auto-capitalization must therefore never auto-engage Shift for
+ * them, otherwise the keyboard opens stuck on the shifted layer.
+ */
+fun isBanglaScriptLanguage(language: Int): Boolean =
+    language == LANGUAGE_BANGLA_JATIYO ||
+        language == LANGUAGE_BANGLA_PROBHAT ||
+        language == LANGUAGE_BENGALI
+
+/**
+ * Any Bangla input language (the script layouts plus Avro phonetic). Used to decide when digits
+ * typed into a text field should render and commit as Bengali numerals (১২৩৪…).
+ */
+fun isBanglaLanguage(language: Int): Boolean =
+    isBanglaScriptLanguage(language) || language == LANGUAGE_BANGLA_AVRO
+
+/** Maps an ASCII digit ('0'-'9') to its Bengali numeral ('০'-'৯'); returns other chars unchanged. */
+fun Char.toBengaliDigitOrSelf(): Char = if (this in '0'..'9') '০' + (this - '0') else this
+
+/** Maps a Bengali numeral ('০'-'৯') to its ASCII digit ('0'-'9'); returns other chars unchanged. */
+fun Char.toAsciiDigitOrSelf(): Char = if (this in '০'..'৯') '0' + (this - '০') else this
+
+fun String.toBengaliString(): String = this.map { it.toBengaliDigitOrSelf() }.joinToString("")
+fun String.toAsciiString(): String = this.map { it.toAsciiDigitOrSelf() }.joinToString("")
+
 fun Context.getSelectedLanguagesSorted(): List<Int> {
     return config.selectedLanguages
         .map { it to getKeyboardLanguageText(it) }
@@ -65,6 +94,9 @@ fun Context.getKeyboardLanguagesRadioItems(): ArrayList<RadioItem> {
 fun Context.getKeyboardLanguageText(language: Int): String {
     return when (language) {
         LANGUAGE_ARABIC -> getString(R.string.translation_arabic)
+        LANGUAGE_BANGLA_AVRO -> getString(R.string.translation_avro)
+        LANGUAGE_BANGLA_JATIYO -> getString(R.string.translation_jatiyo)
+        LANGUAGE_BANGLA_PROBHAT -> getString(R.string.translation_probhat)
         LANGUAGE_BELARUSIAN_CYRL -> "${getString(R.string.translation_belarusian)} (Cyrillic)"
         LANGUAGE_BELARUSIAN_LATN -> "${getString(R.string.translation_belarusian)} (Latin)"
         LANGUAGE_BENGALI -> getString(R.string.translation_bengali)

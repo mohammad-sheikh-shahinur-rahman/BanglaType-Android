@@ -12,15 +12,37 @@ const val MAX_KEYS_PER_MINI_ROW = 9
 
 // shared prefs
 const val VIBRATE_ON_KEYPRESS = "vibrate_on_keypress"
+const val VIBRATION_DURATION = "vibration_duration"
 
 const val SOUND_ON_KEYPRESS = "sound_on_keypress"
 const val SOUND_NONE = 0
 const val SOUND_SYSTEM = 1
 const val SOUND_ALWAYS = 2
 
+// keypress sound volume (used only when SOUND_ALWAYS), as percentage 0..100
+const val KEYPRESS_SOUND_VOLUME = "keypress_sound_volume"
+const val SOUND_VOLUME_LOW = 25
+const val SOUND_VOLUME_MEDIUM = 60
+const val SOUND_VOLUME_HIGH = 100
+
+// keypress vibration strength (used only when vibrateOnKeypress is on)
+const val VIBRATION_STRENGTH = "vibration_strength"
+const val VIBRATION_SYSTEM = 0
+const val VIBRATION_LIGHT = 1
+const val VIBRATION_MEDIUM = 2
+const val VIBRATION_STRONG = 3
+
+// one-handed typing mode
+const val ONE_HANDED_MODE = "one_handed_mode"
+const val ONE_HANDED_OFF = 0
+const val ONE_HANDED_LEFT = 1
+const val ONE_HANDED_RIGHT = 2
+const val ONE_HANDED_WIDTH_PERCENT = 82
+
 const val SHOW_POPUP_ON_KEYPRESS = "show_popup_on_keypress"
 const val SHOW_KEY_BORDERS = "show_key_borders"
 const val SENTENCES_CAPITALIZATION = "sentences_capitalization"
+const val AUTO_PUNCTUATION = "auto_punctuation"
 const val SHOW_EMOJI_KEY = "show_emoji_key"
 const val SHOW_LANGUAGE_SWITCH_KEY = "show_language_switch_key"
 const val LAST_EXPORTED_CLIPS_FOLDER = "last_exported_clips_folder"
@@ -31,18 +53,26 @@ const val SHOW_SUGGESTIONS = "show_suggestions"
 const val CLIPBOARD_HISTORY_ENABLED = "clipboard_history_enabled"
 const val CLIPBOARD_HISTORY_LIMIT = 50
 const val SHOW_NUMBERS_ROW = "show_numbers_row"
+const val ENABLE_SHORTCUTS = "enable_shortcuts"
 const val SELECTED_LANGUAGES = "selected_languages"
 const val VOICE_INPUT_METHOD = "voice_input_method"
 const val RECENTLY_USED_EMOJIS = "recently_used_emojis"
+const val CONTINUOUS_VOICE_TYPING = "continuous_voice_typing"
+const val VOICE_TYPING_PUNCTUATION = "voice_typing_punctuation"
 
-// custom keyboard theme (Gboard-style)
+// custom keyboard theme (Gboard-style) — these are keyboard-only and never touch the app theme
 const val KEYBOARD_THEME_ID = "keyboard_theme_id"
 const val KEYBOARD_BG_IMAGE_PATH = "keyboard_bg_image_path"
 const val KEYBOARD_BG_DIM = "keyboard_bg_dim"
+const val KEYBOARD_TEXT_COLOR = "keyboard_text_color"
+const val KEYBOARD_COLOR = "keyboard_color"
+const val KEYBOARD_PRIMARY_COLOR = "keyboard_primary_color"
+const val KEYBOARD_KEY_OPACITY = "keyboard_key_opacity"
 const val KEYBOARD_THEME_DEFAULT = "default"
 const val KEYBOARD_THEME_CUSTOM_PHOTO = "custom_photo"
 const val KEYBOARD_BG_IMAGE_FILE = "keyboard_bg.jpg"
 const val DEFAULT_KEYBOARD_BG_DIM = 35
+const val DEFAULT_KEYBOARD_KEY_OPACITY = 30
 
 // differentiate current and pinned clips at the keyboards' Clipboard section
 const val ITEM_SECTION_LABEL = 0

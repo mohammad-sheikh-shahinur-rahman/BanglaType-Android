@@ -69,9 +69,16 @@ class MyKeyboard {
         const val KEYCODE_EMOJI_OR_LANGUAGE = -6
         const val KEYCODE_POPUP_EMOJI = -7
         const val KEYCODE_POPUP_SETTINGS = -8
+        const val KEYCODE_POPUP_TEXT_EDIT = -9
 
         // Key roles for special keys
         const val KEY_ROLE_TOOLS = "tools"
+
+        /** Long-pressing a key with this role copies the current selection. */
+        const val KEY_ROLE_COPY = "copy"
+
+        /** Long-pressing a key with this role pastes the clipboard. */
+        const val KEY_ROLE_PASTE = "paste"
 
         fun getDimensionOrFraction(a: TypedArray, index: Int, base: Int, defValue: Int): Int {
             val value = a.peekValue(index) ?: return defValue
@@ -174,6 +181,25 @@ class MyKeyboard {
         /** Popup characters showing after long pressing the key  */
         var popupCharacters: CharSequence? = null
 
+        /**
+         * Number of popup keys this key produces. A space in [popupCharacters] delimits multi-codepoint
+         * tokens (e.g. conjuncts), so count tokens in that case; otherwise it is one key per char.
+         */
+        fun popupKeyCount(): Int {
+            val chars = popupCharacters ?: return 0
+            return if (chars.contains(' ')) {
+                chars.split(Regex("\\s+")).count { it.isNotEmpty() }
+            } else {
+                chars.length
+            }
+        }
+
+        /** Label/character shown and typed when Shift is active. Null = no shifted variant. */
+        var shiftedLabel: CharSequence? = null
+
+        /** Code generated when Shift is active; 0 = none. Derived from shiftedLabel[0]. */
+        var shiftedCode: Int = 0
+
         /** Role identifier for special keys (e.g., "tools" for the tools popup host key) */
         var role: String? = null
 
@@ -219,6 +245,10 @@ class MyKeyboard {
             }
 
             popupCharacters = a.getText(R.styleable.MyKeyboard_Key_popupCharacters)
+            shiftedLabel = a.getText(R.styleable.MyKeyboard_Key_shiftedKeyLabel)
+            if (!shiftedLabel.isNullOrEmpty()) {
+                shiftedCode = shiftedLabel!![0].code
+            }
             popupResId = a.getResourceId(R.styleable.MyKeyboard_Key_popupKeyboard, 0)
             repeatable = a.getBoolean(R.styleable.MyKeyboard_Key_isRepeatable, false)
             edgeFlags = a.getInt(R.styleable.MyKeyboard_Key_keyEdgeFlags, 0)
@@ -230,6 +260,23 @@ class MyKeyboard {
 
             topSmallNumber = a.getString(R.styleable.MyKeyboard_Key_topSmallNumber) ?: ""
             role = a.getString(R.styleable.MyKeyboard_Key_keyRole)
+
+            // Long-press reaches the shifted character without toggling Shift: fold the shifted label in
+            // as the first popup option. Only the Bangla layouts define shiftedKeyLabel, so this is scoped
+            // to them. Tokens are space-delimited so multi-codepoint conjuncts stay intact.
+            val shifted = shiftedLabel?.toString()
+            if (!shifted.isNullOrEmpty() && shifted != label.toString()) {
+                val existing = popupCharacters?.toString().orEmpty()
+                val existingTokens = if (existing.contains(' ')) {
+                    existing.split(Regex("\\s+")).filter { it.isNotEmpty() }
+                } else {
+                    existing.map { it.toString() }
+                }
+                popupCharacters = (listOf(shifted) + existingTokens).distinct().joinToString(" ")
+                if (popupResId == 0) {
+                    popupResId = R.xml.keyboard_popup_template
+                }
+            }
 
             a.recycle()
         }
@@ -279,8 +326,10 @@ class MyKeyboard {
      * @param xmlLayoutResId the resource file that contains the keyboard layout and keys.
      * @param enterKeyType determines what icon should we show on Enter key
      */
-    constructor(context: Context, @XmlRes xmlLayoutResId: Int, enterKeyType: Int) {
-        mDisplayWidth = context.resources.displayMetrics.widthPixels
+    constructor(context: Context, @XmlRes xmlLayoutResId: Int, enterKeyType: Int, widthOverride: Int? = null) {
+        // widthOverride lets callers (e.g. one-handed mode) build a narrower keyboard; keys are sized
+        // as fractions of mDisplayWidth, so they reflow automatically to the smaller width.
+        mDisplayWidth = widthOverride ?: context.resources.displayMetrics.widthPixels
         mDefaultHorizontalGap = 0
         mDefaultWidth = mDisplayWidth / 10
         mDefaultHeight = mDefaultWidth
@@ -309,7 +358,15 @@ class MyKeyboard {
         row.defaultHorizontalGap = mDefaultHorizontalGap
         mKeyboardHeightMultiplier = getKeyboardHeightMultiplier(context.config.keyboardHeightPercentage)
 
-        characters.forEach { character ->
+        // A space acts as an opt-in token delimiter so a single popup key can hold a multi-codepoint
+        // cluster (e.g. the conjunct "র‍্য"). Without a space we keep the legacy one-key-per-char behaviour.
+        val tokens = if (characters.contains(' ')) {
+            characters.split(Regex("\\s+")).filter { it.isNotEmpty() }
+        } else {
+            characters.map { it.toString() }
+        }
+
+        tokens.forEach { token ->
             val key = Key(row)
             if (column >= MAX_KEYS_PER_MINI_ROW) {
                 column = 0
@@ -321,8 +378,8 @@ class MyKeyboard {
 
             key.x = x
             key.y = y
-            key.label = character.toString()
-            key.code = character.code
+            key.label = token
+            key.code = token[0].code
             column++
             x += key.width + key.gap
             mKeys!!.add(key)

@@ -29,6 +29,10 @@ class AboutDialog(val activity: BaseSimpleActivity, val versionName: String) {
             aboutFacebook.setOnClickListener {
                 activity.launchViewIntent(R.string.about_facebook_url)
             }
+
+            aboutLinkedin.setOnClickListener {
+                activity.launchViewIntent(R.string.about_linkedin_url)
+            }
         }
 
         activity.getAlertDialogBuilder()

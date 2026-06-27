@@ -30,15 +30,36 @@
             android:theme="@style/SplashTheme" />
 
         <activity
+            android:name=".activities.PrivacyPolicyActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/privacy_policy"
+            android:parentActivityName=".activities.SettingsActivity" />
+
+        <activity
             android:name="com.itamadersomajinc.banglatype.activities.MainActivity"
             android:configChanges="orientation"
             android:exported="false" />
+
+        <activity
+            android:name=".activities.ManualActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="ব্যবহার বিধি"
+            android:parentActivityName=".activities.SettingsActivity" />
 
         <activity
             android:name=".activities.ManageClipboardItemsActivity"
             android:configChanges="orientation"
             android:exported="false"
             android:label="@string/manage_clipboard_items"
+            android:parentActivityName=".activities.SettingsActivity" />
+
+        <activity
+            android:name=".activities.ManageShortcutsActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/manage_shortcuts"
             android:parentActivityName=".activities.SettingsActivity" />
 
         <service
@@ -229,6 +250,10 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity-alias>
 
         <activity-alias

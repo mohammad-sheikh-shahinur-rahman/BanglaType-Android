@@ -1,0 +1,13 @@
+<resources>
+
+    <!-- Android 12+ system splash. Shown by the OS *before* SplashActivity draws.
+         We give it the same brand background and a circular logo so the system
+         splash and the animated SplashActivity read as one continuous splash. -->
+    <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:windowSplashScreenBackground">@color/brand_blue</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_screen_icon</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/white</item>
+    </style>
+</resources>

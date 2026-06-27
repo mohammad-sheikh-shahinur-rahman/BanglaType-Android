@@ -28,6 +28,7 @@ import android.util.AttributeSet
 import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -41,6 +42,7 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.inline.InlineContentView
 import androidx.annotation.RequiresApi
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.view.ViewCompat
@@ -90,6 +92,10 @@ import com.itamadersomajinc.banglatype.extensions.getCurrentVoiceInputMethod
 import com.itamadersomajinc.banglatype.extensions.getOrAutoSelectVoiceInputMethod
 import com.itamadersomajinc.banglatype.extensions.getVoiceInputMethods
 import com.itamadersomajinc.banglatype.extensions.getKeyboardBackgroundColor
+import com.itamadersomajinc.banglatype.extensions.getKeyboardBaseColor
+import com.itamadersomajinc.banglatype.extensions.getKeyboardTextColor
+import com.itamadersomajinc.banglatype.extensions.getKeyboardAccentColor
+import com.itamadersomajinc.banglatype.extensions.getKeyboardKeyColor
 import com.itamadersomajinc.banglatype.extensions.hasKeyboardBackgroundDrawable
 import com.itamadersomajinc.banglatype.extensions.getStrokeColor
 import com.itamadersomajinc.banglatype.extensions.isDeviceLocked
@@ -119,6 +125,9 @@ import com.itamadersomajinc.banglatype.helpers.MyKeyboard.Companion.KEYCODE_POPU
 import com.itamadersomajinc.banglatype.helpers.MyKeyboard.Companion.KEYCODE_SHIFT
 import com.itamadersomajinc.banglatype.helpers.MyKeyboard.Companion.KEYCODE_SPACE
 import com.itamadersomajinc.banglatype.helpers.MyKeyboard.Companion.KEYCODE_SYMBOLS_MODE_CHANGE
+import com.itamadersomajinc.banglatype.helpers.ONE_HANDED_LEFT
+import com.itamadersomajinc.banglatype.helpers.ONE_HANDED_OFF
+import com.itamadersomajinc.banglatype.helpers.ONE_HANDED_RIGHT
 import com.itamadersomajinc.banglatype.helpers.RECENTLY_USED_EMOJIS
 import com.itamadersomajinc.banglatype.helpers.ShiftState
 import com.itamadersomajinc.banglatype.helpers.cachedVNTelexData
@@ -160,6 +169,10 @@ class MyKeyboardView @JvmOverloads constructor(
 
     private var mKeyboard: MyKeyboard? = null
     private var mCurrentKeyIndex: Int = NOT_A_KEY
+
+    // Current one-handed alignment (ONE_HANDED_OFF / _LEFT / _RIGHT); drives the side shift and the
+    // side-control panel set up in updateOneHandedMode().
+    private var mOneHandedMode = ONE_HANDED_OFF
 
     private var mLabelTextSize = 0
     private var mKeyTextSize = 0
@@ -262,6 +275,8 @@ class MyKeyboardView @JvmOverloads constructor(
 
     private var mHandler: Handler? = null
 
+    private var isSelecting = false
+
     companion object {
         private const val NOT_A_KEY = -1
         private val LONG_PRESSABLE_STATE_SET = intArrayOf(R.attr.state_long_pressable)
@@ -303,10 +318,10 @@ class MyKeyboardView @JvmOverloads constructor(
         mLanguageSwipeThreshold = mSpaceMoveThreshold * 3
 
         with(safeStorageContext) {
-            mTextColor = getProperTextColor()
-            mBackgroundColor = getProperBackgroundColor()
+            mTextColor = getKeyboardTextColor()
+            mBackgroundColor = getKeyboardBaseColor()
             mKeyboardBackgroundColor = getKeyboardBackgroundColor()
-            mPrimaryColor = getProperPrimaryColor()
+            mPrimaryColor = getKeyboardAccentColor()
             mStrokeColor = getStrokeColor()
         }
 
@@ -438,6 +453,19 @@ class MyKeyboardView @JvmOverloads constructor(
                 }
             }
 
+            // One-handed side controls: flip the keyboard to the opposite side, or expand back to full width.
+            oneHandedMove.setOnLongClickListener { context.toast(R.string.one_handed_switch_side); true }
+            oneHandedMove.setOnClickListener {
+                vibrateIfNeeded()
+                val flipped = if (mOneHandedMode == ONE_HANDED_LEFT) ONE_HANDED_RIGHT else ONE_HANDED_LEFT
+                mOnKeyboardActionListener?.onOneHandedModeChanged(flipped)
+            }
+            oneHandedExit.setOnLongClickListener { context.toast(R.string.one_handed_exit); true }
+            oneHandedExit.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onOneHandedModeChanged(ONE_HANDED_OFF)
+            }
+
             pinnedClipboardItems.setOnLongClickListener { context.toast(R.string.clipboard); true; }
             pinnedClipboardItems.setOnClickListener {
                 vibrateIfNeeded()
@@ -449,6 +477,12 @@ class MyKeyboardView @JvmOverloads constructor(
                 vibrateIfNeeded()
                 clearClipboardContent()
                 toggleClipboardVisibility(false)
+            }
+
+            textEditingButton.setOnLongClickListener { context.toast(R.string.text_editing); true; }
+            textEditingButton.setOnClickListener {
+                vibrateIfNeeded()
+                openTextEditingPanel()
             }
 
             suggestionsHolder.addOnLayoutChangeListener(object : OnLayoutChangeListener {
@@ -512,7 +546,102 @@ class MyKeyboardView @JvmOverloads constructor(
             emojiSearch.onTextChangeListener { newText ->
                 filterEmojis(newText)
             }
+
+            textEditingClose.setOnClickListener {
+                vibrateIfNeeded()
+                closeTextEditingPanel()
+            }
+
+            editSelectAll.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onEditContextAction(android.R.id.selectAll)
+            }
+
+            editCopy.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onEditContextAction(android.R.id.copy)
+            }
+
+            editCut.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onEditContextAction(android.R.id.cut)
+            }
+
+            editPaste.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onEditContextAction(android.R.id.paste)
+            }
+
+            editSelect.setOnClickListener {
+                vibrateIfNeeded()
+                isSelecting = !isSelecting
+                updateTextEditingSelectButton()
+            }
+
+            editDpadUp.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onEditCursorMove(KeyEvent.KEYCODE_DPAD_UP, isSelecting)
+            }
+
+            editDpadDown.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onEditCursorMove(KeyEvent.KEYCODE_DPAD_DOWN, isSelecting)
+            }
+
+            editDpadLeft.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onEditCursorMove(KeyEvent.KEYCODE_DPAD_LEFT, isSelecting)
+            }
+
+            editDpadRight.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onEditCursorMove(KeyEvent.KEYCODE_DPAD_RIGHT, isSelecting)
+            }
+
+            editBackspace.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onKey(MyKeyboard.KEYCODE_DELETE)
+            }
         }
+    }
+
+    /**
+     * Aligns the (already narrowed) keyboard to the left/right for one-handed typing and shows the
+     * side-control panel in the freed-up gap. [ONE_HANDED_OFF] restores the full-width keyboard and
+     * hides the panel. The reduced width itself is applied by the IME when it builds the keyboard;
+     * here we only position the view and the controls.
+     */
+    fun updateOneHandedMode(mode: Int) {
+        mOneHandedMode = mode
+        val panel = keyboardViewBinding?.oneHandedPanel ?: return
+        val keyboardParams = layoutParams as? ConstraintLayout.LayoutParams ?: return
+        val panelParams = panel.layoutParams as? ConstraintLayout.LayoutParams ?: return
+
+        when (mode) {
+            ONE_HANDED_LEFT -> {
+                keyboardParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
+                keyboardParams.horizontalBias = 0f      // keyboard hugs the left edge
+                panelParams.horizontalBias = 1f         // controls sit in the right-hand gap
+                panel.beVisible()
+            }
+
+            ONE_HANDED_RIGHT -> {
+                keyboardParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
+                keyboardParams.horizontalBias = 1f
+                panelParams.horizontalBias = 0f
+                panel.beVisible()
+            }
+
+            else -> {
+                keyboardParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+                keyboardParams.horizontalBias = 0.5f
+                panel.beGone()
+            }
+        }
+
+        layoutParams = keyboardParams
+        panel.layoutParams = panelParams
+        requestLayout()
     }
 
     /** Populates the word-prediction strip in the toolbar. Empty list hides it. */
@@ -581,10 +710,10 @@ class MyKeyboardView @JvmOverloads constructor(
 
     fun setupKeyboard(changedView: View? = null) {
         with(safeStorageContext) {
-            mTextColor = getProperTextColor()
-            mBackgroundColor = getProperBackgroundColor()
+            mTextColor = getKeyboardTextColor()
+            mBackgroundColor = getKeyboardBaseColor()
             mKeyboardBackgroundColor = getKeyboardBackgroundColor()
-            mPrimaryColor = getProperPrimaryColor()
+            mPrimaryColor = getKeyboardAccentColor()
             mStrokeColor = getStrokeColor()
 
             mShowKeyBorders = config.showKeyBorders
@@ -680,6 +809,23 @@ class MyKeyboardView @JvmOverloads constructor(
             speechBarHint.setTextColor(mTextColor.adjustAlpha(0.8f))
             speechBarMic.background.applyColorFilter(mPrimaryColor)
             speechBarMic.applyColorFilter(mPrimaryColor.getContrastColor())
+
+            textEditingHolder.background = ColorDrawable(mBackgroundColor)
+            textEditingTopBar.background = ColorDrawable(mKeyboardBackgroundColor)
+            textEditingClose.applyColorFilter(mTextColor)
+            textEditingLabel.setTextColor(mTextColor)
+
+            editSelectAll.setTextColor(mTextColor)
+            editCopy.setTextColor(mTextColor)
+            editCut.setTextColor(mTextColor)
+            editPaste.setTextColor(mTextColor)
+            editSelect.setTextColor(mTextColor)
+
+            editDpadUp.applyColorFilter(mTextColor)
+            editDpadDown.applyColorFilter(mTextColor)
+            editDpadLeft.applyColorFilter(mTextColor)
+            editDpadRight.applyColorFilter(mTextColor)
+            editBackspace.applyColorFilter(mTextColor)
         }
 
         setupEmojiPalette(
@@ -879,7 +1025,7 @@ class MyKeyboardView @JvmOverloads constructor(
 
                 if (
                     key.topSmallNumber.isNotEmpty()
-                    && !(context.config.showNumbersRow && Regex("\\d").matches(key.topSmallNumber))
+                    && !(context.config.showNumbersRow && Regex("[\\d০-৯]").matches(key.topSmallNumber))
                 ) {
                     val bounds = Rect().also {
                         smallLetterPaint.getTextBounds(
@@ -893,15 +1039,41 @@ class MyKeyboardView @JvmOverloads constructor(
                     smallLetterPaint.color = if (key.pressed) {
                         textColor
                     } else {
-                        smallLetterPaint.color
+                        mTextColor.adjustAlpha(0.7f)
                     }
 
                     canvas.drawText(
                         key.topSmallNumber,
-                        key.width - bounds.width() / 2f - mTopSmallNumberMarginWidth,
-                        key.y + mTopSmallNumberSize + mTopSmallNumberMarginHeight,
+                        key.width - bounds.width() / 2f - mTopSmallNumberMarginWidth - 4f,
+                        mTopSmallNumberSize + mTopSmallNumberMarginHeight + 4f,
                         smallLetterPaint
                     )
+                } else if (key.popupCharacters?.isNotEmpty() == true) {
+                    val popupChars = key.popupCharacters.toString().trim()
+                    val hint = if (popupChars.contains(' ')) {
+                        popupChars.split(Regex("\\s+")).firstOrNull() ?: ""
+                    } else {
+                        popupChars.take(1)
+                    }
+
+                    if (hint.isNotEmpty() && hint != label) {
+                        val bounds = Rect().also {
+                            smallLetterPaint.getTextBounds(hint, 0, hint.length, it)
+                        }
+
+                        smallLetterPaint.color = if (key.pressed) {
+                            textColor
+                        } else {
+                            mTextColor.adjustAlpha(0.6f)
+                        }
+
+                        canvas.drawText(
+                            hint,
+                            key.width - bounds.width() / 2f - mTopSmallNumberMarginWidth - 4f,
+                            mTopSmallNumberSize + mTopSmallNumberMarginHeight + 4f,
+                            smallLetterPaint
+                        )
+                    }
                 }
 
                 // Draw secondary icons for label-based keys
@@ -1363,6 +1535,12 @@ class MyKeyboardView @JvmOverloads constructor(
             return onSpaceBarLongPressed()
         } else if (popupKey.code == KEYCODE_EMOJI_OR_LANGUAGE) {
             return onEmojiOrLanguageLongPressed()
+        } else if (popupKey.role == MyKeyboard.KEY_ROLE_COPY || popupKey.role == MyKeyboard.KEY_ROLE_PASTE) {
+            // Desktop-style shortcuts: long-press C to copy, V to paste.
+            val action = if (popupKey.role == MyKeyboard.KEY_ROLE_COPY) android.R.id.copy else android.R.id.paste
+            mOnKeyboardActionListener?.onEditContextAction(action)
+            vibrateIfNeeded()
+            return true
         } else {
             val popupKeyboardId = popupKey.popupResId
             if (popupKeyboardId != 0) {
@@ -1410,8 +1588,8 @@ class MyKeyboardView @JvmOverloads constructor(
                 mPopupX = popupKey.x
                 mPopupY = popupKey.y
 
-                // Use popupCharacters length if available, otherwise use actual key count from the loaded keyboard
-                val popupKeyCount = popupKey.popupCharacters?.length ?: mMiniKeyboard!!.mKeys.size
+                // Use popup token count if available, otherwise use actual key count from the loaded keyboard
+                val popupKeyCount = if (popupKey.popupCharacters != null) popupKey.popupKeyCount() else mMiniKeyboard!!.mKeys.size
                 val widthToUse = mMiniKeyboardContainer!!.measuredWidth - (popupKeyCount / 2) * popupKeyWidth
                 mPopupX = mPopupX + popupKeyWidth - widthToUse
                 mPopupY -= mMiniKeyboardContainer!!.measuredHeight
@@ -1523,7 +1701,13 @@ class MyKeyboardView @JvmOverloads constructor(
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     mMiniKeyboard?.mKeys?.firstOrNull { it.focused }?.apply {
-                        mOnKeyboardActionListener!!.onKey(code)
+                        // A multi-codepoint popup token (e.g. the conjunct "র‍্য") must be committed as a
+                        // whole string; single chars keep going through the code-based path.
+                        if (label.length > 1) {
+                            mOnKeyboardActionListener!!.onText(label.toString())
+                        } else {
+                            mOnKeyboardActionListener!!.onKey(code)
+                        }
                     }
                     mMiniKeyboardSelectedKeyIndex = -1
                     dismissPopupKeyboard()
@@ -1607,10 +1791,12 @@ class MyKeyboardView @JvmOverloads constructor(
                     val msg = mHandler!!.obtainMessage(MSG_REPEAT)
                     mHandler!!.sendMessageDelayed(msg, REPEAT_START_DELAY.toLong())
                     // if the user long presses space bar, move the cursor after swiping left/right
-                    if (mKeys[mCurrentKey].code == KEYCODE_SPACE) {
+                    if (mKeys[mCurrentKey].code == KEYCODE_SPACE || (mKeys[mCurrentKey].code == KEYCODE_DELETE && context.config.swipeDeleteWord)) {
                         mLastSpaceMoveX = -1
                         mCursorControlActive = false
-                    } else {
+                    }
+
+                    if (mKeys[mCurrentKey].code != KEYCODE_SPACE) {
                         repeatKey()
                     }
 
@@ -1655,7 +1841,7 @@ class MyKeyboardView @JvmOverloads constructor(
                     }
                 }
 
-                // swipe horizontally across the spacebar to cycle the keyboard language
+                // swipe horizontally across the spacebar
                 val currentKey = mKeys.getOrNull(mCurrentKey)
                 if (currentKey?.code == KEYCODE_SPACE && mLastSpaceMoveX != 0) {
                     if (mLastSpaceMoveX == -1) {
@@ -1663,16 +1849,43 @@ class MyKeyboardView @JvmOverloads constructor(
                     }
 
                     val diff = mLastX - mLastSpaceMoveX
+                    if (context.config.spaceSwipeCursorControl) {
+                        if (Math.abs(diff) >= mSpaceMoveThreshold) {
+                            if (diff <= -mSpaceMoveThreshold) {
+                                mOnKeyboardActionListener?.moveCursorLeft()
+                            } else {
+                                mOnKeyboardActionListener?.moveCursorRight()
+                            }
+                            performHapticHandleMove()
+                            mLastSpaceMoveX = mLastX
+                            if (!mCursorControlActive) mHandler?.removeMessages(MSG_LONGPRESS)
+                            mCursorControlActive = true
+                        }
+                    } else {
+                        if (diff <= -mLanguageSwipeThreshold) {
+                            mOnKeyboardActionListener?.onSpaceSwipeLanguage(false)
+                            mLastSpaceMoveX = mLastX
+                            if (!mCursorControlActive) mHandler?.removeMessages(MSG_LONGPRESS)
+                            mCursorControlActive = true
+                        } else if (diff >= mLanguageSwipeThreshold) {
+                            mOnKeyboardActionListener?.onSpaceSwipeLanguage(true)
+                            mLastSpaceMoveX = mLastX
+                            if (!mCursorControlActive) mHandler?.removeMessages(MSG_LONGPRESS)
+                            mCursorControlActive = true
+                        }
+                    }
+                } else if (currentKey?.code == KEYCODE_DELETE && mLastSpaceMoveX != 0 && context.config.swipeDeleteWord) {
+                    if (mLastSpaceMoveX == -1) {
+                        mLastSpaceMoveX = mLastX
+                    }
+                    val diff = mLastX - mLastSpaceMoveX
                     if (diff <= -mLanguageSwipeThreshold) {
-                        mOnKeyboardActionListener?.onSpaceSwipeLanguage(false)
+                        mOnKeyboardActionListener?.onDeleteWord()
+                        vibrateIfNeeded()
                         mLastSpaceMoveX = mLastX
-                        if (!mCursorControlActive) mHandler?.removeMessages(MSG_LONGPRESS)
                         mCursorControlActive = true
-                    } else if (diff >= mLanguageSwipeThreshold) {
-                        mOnKeyboardActionListener?.onSpaceSwipeLanguage(true)
-                        mLastSpaceMoveX = mLastX
-                        if (!mCursorControlActive) mHandler?.removeMessages(MSG_LONGPRESS)
-                        mCursorControlActive = true
+                        mHandler?.removeMessages(MSG_LONGPRESS)
+                        mHandler?.removeMessages(MSG_REPEAT)
                     }
                 } else if (!continueLongPress) {
                     // Cancel old long-press
@@ -1781,6 +1994,32 @@ class MyKeyboardView @JvmOverloads constructor(
             speechBarHint.text = context.getString(R.string.tap_to_speak)
         }
         setVoiceListening(false)
+    }
+
+    fun openTextEditingPanel() {
+        keyboardViewBinding?.apply {
+            emojiPaletteHolder.beGone()
+            clipboardManagerHolder.beGone()
+            speechBarHolder.beGone()
+            textEditingHolder.beVisible()
+            suggestionsHolder.beGone()
+            isSelecting = false
+            updateTextEditingSelectButton()
+        }
+    }
+
+    private fun updateTextEditingSelectButton() {
+        keyboardViewBinding?.apply {
+            val color = if (isSelecting) context.getProperPrimaryColor() else Color.TRANSPARENT
+            editSelect.setBackgroundColor(color)
+        }
+    }
+
+    fun closeTextEditingPanel() {
+        keyboardViewBinding?.apply {
+            textEditingHolder.beGone()
+            suggestionsHolder.beVisible()
+        }
     }
 
     fun closeSpeechBar() {
@@ -2221,24 +2460,7 @@ class MyKeyboardView @JvmOverloads constructor(
         }
     }
 
-    private fun getKeyColor(): Int {
-        // Photo/gradient theme: translucent white keys so the background shows through (Gboard look).
-        if (mHasBackgroundImage) {
-            return Color.WHITE.adjustAlpha(0.18f)
-        }
-        val backgroundColor = safeStorageContext.getKeyboardBackgroundColor()
-        val lighterColor = backgroundColor.lightenColor()
-        val keyColor = if (safeStorageContext.isDynamicTheme()) {
-            lighterColor
-        } else {
-            if (backgroundColor == Color.BLACK) {
-                backgroundColor.getContrastColor().adjustAlpha(0.1f)
-            } else {
-                lighterColor
-            }
-        }
-        return keyColor
-    }
+    private fun getKeyColor(): Int = safeStorageContext.getKeyboardKeyColor(mHasBackgroundImage)
 
     @RequiresApi(Build.VERSION_CODES.R)
     fun addToClipboardViews(it: InlineContentView, addToFront: Boolean = false) {
@@ -2290,7 +2512,7 @@ class MyKeyboardView @JvmOverloads constructor(
      * Returns: Popup Key width depends on popup keys count
      */
     private fun MyKeyboard.Key.calcKeyWidth(containerWidth: Int): Int {
-        val popupKeyCount = this.popupCharacters!!.length
+        val popupKeyCount = this.popupKeyCount()
 
         return if (popupKeyCount > containerWidth / this.width) {
             containerWidth / popupKeyCount

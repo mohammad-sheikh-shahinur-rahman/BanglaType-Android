@@ -15,9 +15,25 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getBoolean(VIBRATE_ON_KEYPRESS, true)
         set(vibrateOnKeypress) = prefs.edit().putBoolean(VIBRATE_ON_KEYPRESS, vibrateOnKeypress).apply()
 
+    var keypressVibrationDuration: Int
+        get() = prefs.getInt(VIBRATION_DURATION, 30)
+        set(duration) = prefs.edit().putInt(VIBRATION_DURATION, duration).apply()
+
     var soundOnKeypress: Int
         get() = prefs.getInt(SOUND_ON_KEYPRESS, SOUND_SYSTEM)
         set(soundOnKeypress) = prefs.edit().putInt(SOUND_ON_KEYPRESS, soundOnKeypress).apply()
+
+    var keypressSoundVolume: Int
+        get() = prefs.getInt(KEYPRESS_SOUND_VOLUME, SOUND_VOLUME_HIGH)
+        set(keypressSoundVolume) = prefs.edit().putInt(KEYPRESS_SOUND_VOLUME, keypressSoundVolume).apply()
+
+    var vibrationStrength: Int
+        get() = prefs.getInt(VIBRATION_STRENGTH, VIBRATION_SYSTEM)
+        set(vibrationStrength) = prefs.edit().putInt(VIBRATION_STRENGTH, vibrationStrength).apply()
+
+    var oneHandedMode: Int
+        get() = prefs.getInt(ONE_HANDED_MODE, ONE_HANDED_OFF)
+        set(oneHandedMode) = prefs.edit().putInt(ONE_HANDED_MODE, oneHandedMode).apply()
 
     var showPopupOnKeypress: Boolean
         get() = prefs.getBoolean(SHOW_POPUP_ON_KEYPRESS, true)
@@ -26,6 +42,24 @@ class Config(context: Context) : BaseConfig(context) {
     var enableSentencesCapitalization: Boolean
         get() = prefs.getBoolean(SENTENCES_CAPITALIZATION, true)
         set(enableCapitalization) = prefs.edit().putBoolean(SENTENCES_CAPITALIZATION, enableCapitalization).apply()
+
+    var autoPunctuation: Boolean
+        get() = prefs.getBoolean(AUTO_PUNCTUATION, true)
+        set(autoPunctuation) = prefs.edit().putBoolean(AUTO_PUNCTUATION, autoPunctuation).apply()
+
+    // Opt-in: off by default so a plain spacebar swipe changes language. When enabled, swiping the
+    // spacebar moves the text cursor instead.
+    var spaceSwipeCursorControl: Boolean
+        get() = prefs.getBoolean("space_swipe_cursor_control", false)
+        set(value) = prefs.edit().putBoolean("space_swipe_cursor_control", value).apply()
+
+    var swipeDeleteWord: Boolean
+        get() = prefs.getBoolean("swipe_delete_word", true)
+        set(value) = prefs.edit().putBoolean("swipe_delete_word", value).apply()
+
+    var enableShortcuts: Boolean
+        get() = prefs.getBoolean(ENABLE_SHORTCUTS, true)
+        set(enableShortcuts) = prefs.edit().putBoolean(ENABLE_SHORTCUTS, enableShortcuts).apply()
 
     var showEmojiKey: Boolean
         get() = prefs.getBoolean(SHOW_EMOJI_KEY, true)
@@ -44,7 +78,7 @@ class Config(context: Context) : BaseConfig(context) {
         set(lastExportedClipsFolder) = prefs.edit().putString(LAST_EXPORTED_CLIPS_FOLDER, lastExportedClipsFolder).apply()
 
     var keyboardLanguage: Int
-        get() = prefs.getInt(KEYBOARD_LANGUAGE, getDefaultLanguage())
+        get() = prefs.getInt(KEYBOARD_LANGUAGE, LANGUAGE_BANGLA_AVRO)
         set(keyboardLanguage) = prefs.edit().putInt(KEYBOARD_LANGUAGE, keyboardLanguage).apply()
 
     var keyboardHeightPercentage: Int
@@ -75,6 +109,14 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getString(VOICE_INPUT_METHOD, "")!!
         set(voiceInputMethod) = prefs.edit().putString(VOICE_INPUT_METHOD, voiceInputMethod).apply()
 
+    var continuousVoiceTyping: Boolean
+        get() = prefs.getBoolean(CONTINUOUS_VOICE_TYPING, true)
+        set(value) = prefs.edit().putBoolean(CONTINUOUS_VOICE_TYPING, value).apply()
+
+    var voiceTypingPunctuation: Boolean
+        get() = prefs.getBoolean(VOICE_TYPING_PUNCTUATION, true)
+        set(value) = prefs.edit().putBoolean(VOICE_TYPING_PUNCTUATION, value).apply()
+
     // ---- Custom keyboard theme (Gboard-style) ----
 
     var keyboardThemeId: String
@@ -92,10 +134,33 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getInt(KEYBOARD_BG_DIM, DEFAULT_KEYBOARD_BG_DIM)
         set(keyboardBackgroundDim) = prefs.edit().putInt(KEYBOARD_BG_DIM, keyboardBackgroundDim).apply()
 
+    // Keyboard-only colors (kept separate from the app theme so changing a keyboard theme never
+    // recolors the rest of the app). Only used when a custom keyboard theme is selected.
+    var keyboardTextColor: Int
+        get() = prefs.getInt(KEYBOARD_TEXT_COLOR, 0xFFEEEEEE.toInt())
+        set(keyboardTextColor) = prefs.edit().putInt(KEYBOARD_TEXT_COLOR, keyboardTextColor).apply()
+
+    var keyboardColor: Int
+        get() = prefs.getInt(KEYBOARD_COLOR, 0xFF2E2E2E.toInt())
+        set(keyboardColor) = prefs.edit().putInt(KEYBOARD_COLOR, keyboardColor).apply()
+
+    var keyboardPrimaryColor: Int
+        get() = prefs.getInt(KEYBOARD_PRIMARY_COLOR, 0xFF0078F8.toInt())
+        set(keyboardPrimaryColor) = prefs.edit().putInt(KEYBOARD_PRIMARY_COLOR, keyboardPrimaryColor).apply()
+
+    // Key contrast over the background, 0 (barely visible) .. 100 (most opaque).
+    var keyboardKeyOpacity: Int
+        get() = prefs.getInt(KEYBOARD_KEY_OPACITY, DEFAULT_KEYBOARD_KEY_OPACITY)
+        set(keyboardKeyOpacity) = prefs.edit().putInt(KEYBOARD_KEY_OPACITY, keyboardKeyOpacity).apply()
+
     var selectedLanguages: MutableSet<Int>
         get() {
-            val defaultLanguage = getDefaultLanguage().toString()
-            val stringSet = prefs.getStringSet(SELECTED_LANGUAGES, hashSetOf(defaultLanguage))!!
+            val defaultLanguages = hashSetOf(
+                LANGUAGE_BANGLA_AVRO.toString(),
+                LANGUAGE_ENGLISH_QWERTY.toString(),
+                LANGUAGE_BANGLA_PROBHAT.toString()
+            )
+            val stringSet = prefs.getStringSet(SELECTED_LANGUAGES, defaultLanguages)!!
             return stringSet.map { it.toInt() }.toMutableSet()
         }
         set(selectedLanguages) {

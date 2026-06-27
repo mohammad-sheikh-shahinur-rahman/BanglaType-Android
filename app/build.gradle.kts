@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jetbrains.kotlin.konan.properties.Properties
+import java.util.Properties
 import java.io.FileInputStream
 
 plugins {
@@ -28,19 +28,21 @@ base {
 }
 
 android {
-    compileSdk = project.libs.versions.app.build.compileSDKVersion.get().toInt()
+    compileSdk = libs.versions.app.build.compileSDKVersion.get().toInt()
+
+    val appId = project.property("APP_ID").toString()
+    val versionNameString = project.property("VERSION_NAME").toString()
+    val versionCodeInt = project.property("VERSION_CODE").toString().toInt()
 
     defaultConfig {
-        applicationId = project.property("APP_ID").toString()
-        minSdk = project.libs.versions.app.build.minimumSDK.get().toInt()
-        targetSdk = project.libs.versions.app.build.targetSDK.get().toInt()
-        versionName = project.property("VERSION_NAME").toString()
-        versionCode = project.property("VERSION_CODE").toString().toInt()
+        applicationId = appId
+        buildConfigField("String", "BASE_APPLICATION_ID", "\"$appId\"")
+        minSdk = libs.versions.app.build.minimumSDK.get().toInt()
+        targetSdk = libs.versions.app.build.targetSDK.get().toInt()
+        versionName = versionNameString
+        versionCode = versionCodeInt
         multiDexEnabled = true
         vectorDrawables.useSupportLibrary = true
-        ksp {
-            arg("room.schemaLocation", "$projectDir/schemas")
-        }
     }
 
     signingConfigs {
@@ -111,13 +113,7 @@ android {
         generateLocaleConfig = true
     }
 
-    tasks.withType<KotlinCompile> {
-        compilerOptions.jvmTarget.set(
-            JvmTarget.fromTarget(project.libs.versions.app.build.kotlinJVMTarget.get())
-        )
-    }
-
-    namespace = project.property("APP_ID").toString()
+    namespace = appId
 
     lint {
         checkReleaseBuilds = false
@@ -132,6 +128,16 @@ android {
             enableSplit = false
         }
     }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+tasks.withType<KotlinCompile> {
+    compilerOptions.jvmTarget.set(
+        JvmTarget.fromTarget(libs.versions.app.build.kotlinJVMTarget.get())
+    )
 }
 
 detekt {

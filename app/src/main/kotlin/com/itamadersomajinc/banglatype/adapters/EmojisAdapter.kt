@@ -16,7 +16,8 @@ import com.itamadersomajinc.banglatype.helpers.getCategoryTitleRes
 class EmojisAdapter(
     val context: Context,
     var items: List<Item>,
-    val itemClick: (emoji: EmojiData) -> Unit
+    val itemClick: (emoji: EmojiData) -> Unit,
+    val itemLongClick: ((emoji: EmojiData) -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val layoutInflater = LayoutInflater.from(context)
@@ -66,6 +67,14 @@ class EmojisAdapter(
                 binding.emojiValue.text = processed
                 setOnClickListener {
                     itemClick.invoke(emoji.emojiData)
+                }
+                if (emoji.emojiData.variants.isNotEmpty() && itemLongClick != null) {
+                    setOnLongClickListener {
+                        itemLongClick.invoke(emoji.emojiData)
+                        true
+                    }
+                } else {
+                    setOnLongClickListener(null)
                 }
             }
         }

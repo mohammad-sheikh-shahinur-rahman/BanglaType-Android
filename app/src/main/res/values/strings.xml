@@ -6,7 +6,11 @@
     <!-- About -->
     <string name="about_app_description">A fast and simple keyboard for typing Bangla and more.</string>
     <string name="about_developer_label">Developer</string>
-    <string name="about_developer_name">IT Amadersomaj .Inc</string>
+    <string name="about_developer_name">Mohammad Sheikh Shahinur Rahman</string>
+    <string name="about_developer_designation">Software Engineer, Author and Cyber Security Expert</string>
+    <string name="about_copyright">© 2026 IT Amadersomaj Inc.</string>
+    <string name="about_linkedin_url">https://www.linkedin.com/in/mohammad-sheikh-shahinur-rahman/</string>
+    <string name="about_linkedin">LinkedIn</string>
     <string name="about_email">info@amadersomaj.com</string>
     <string name="about_website">amadersomaj.com</string>
     <string name="about_website_url">https://amadersomaj.com</string>
@@ -33,6 +37,18 @@
     <string name="text_pinned">Text has been pinned</string>
     <string name="export_clipboard_items">Export clipboard items</string>
     <string name="import_clipboard_items">Import clipboard items</string>
+    <!-- Text shortcuts -->
+    <string name="manage_shortcuts">Manage text shortcuts</string>
+    <string name="manage_shortcuts_summary">Add short triggers that expand into longer text as you type.</string>
+    <string name="shortcuts_empty">You have no text shortcuts yet.</string>
+    <string name="shortcut_trigger">Shortcut (e.g. omw)</string>
+    <string name="shortcut_expansion">Expanded text (e.g. on my way)</string>
+    <string name="enable_text_shortcuts">Enable text shortcuts</string>
+    <string name="trigger_cannot_be_empty">Shortcut cannot be empty</string>
+    <string name="expansion_cannot_be_empty">Expanded text cannot be empty</string>
+    <string name="trigger_already_exists">A shortcut with this trigger already exists</string>
+    <string name="export_shortcuts">Export text shortcuts</string>
+    <string name="import_shortcuts">Import text shortcuts</string>
     <!-- Accessibility -->
     <string name="keycode_delete">Delete</string>
     <string name="keycode_mode_change">Change keyboard type</string>
@@ -53,11 +69,27 @@
     <string name="sound_none">Off</string>
     <string name="sound_system">Follow system</string>
     <string name="sound_always">Always on</string>
+    <string name="keypress_sound_volume">Keypress sound volume</string>
+    <string name="vibration_strength">Vibration strength</string>
+    <string name="vibration_default">System default</string>
+    <string name="vibration_light">Light</string>
+    <string name="vibration_medium">Medium</string>
+    <string name="vibration_strong">Strong</string>
+    <string name="volume_low">Low</string>
+    <string name="volume_medium">Medium</string>
+    <string name="volume_high">High</string>
     <string name="keyboard_language">Keyboard language</string>
     <string name="keyboard_height">Keyboard height</string>
+    <string name="one_handed_mode">One-handed mode</string>
+    <string name="one_handed_off">Off</string>
+    <string name="one_handed_left">Left</string>
+    <string name="one_handed_right">Right</string>
+    <string name="one_handed_switch_side">Switch side</string>
+    <string name="one_handed_exit">Exit one-handed mode</string>
     <string name="show_key_borders">Show key borders</string>
     <string name="show_numbers_row">Show numbers on a separate row</string>
     <string name="start_sentences_capitalized">Start sentences with a capital letter</string>
+    <string name="auto_punctuation">Double-space inserts a full stop</string>
     <string name="show_emoji_key">Show emoji key</string>
     <string name="show_language_switch_key">Show language switch key</string>
     <!-- Emojis -->
@@ -77,6 +109,16 @@
     <string name="switch_to_voice_typing">Switch to voice typing</string>
     <string name="voice_typing">Voice typing</string>
     <string name="tap_to_speak">Tap to speak</string>
+    <string name="continuous_voice_typing">Continuous voice typing</string>
+    <string name="continuous_voice_typing_summary">Keep the microphone listening until manually stopped</string>
+    <string name="voice_typing_punctuation">Voice punctuation &amp; commands</string>
+    <string name="voice_typing_punctuation_summary">Saying things like \"comma\" or \"new line\" will insert the actual symbol</string>
+
+    <!-- Text editing -->
+    <string name="text_editing">Text editing</string>
+    <string name="select">Select</string>
+    <string name="paste">Paste</string>
+    <string name="cut">Cut</string>
 
     <!-- Custom UI Strings -->
     <string name="follow_us_facebook">Follow us on Facebook</string>
@@ -90,6 +132,12 @@
     <string name="feature_voice">Speech-to-Text</string>
     <string name="test_keyboard">Test Keyboard</string>
     <string name="type_something">Type something...</string>
+    <string name="user_manual">User Manual</string>
+    <string name="settings">Settings</string>
+    <string name="rate_us">Rate Us</string>
+    <string name="about">About</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="ok">OK</string>
     <string name="email_address">Email address</string>
     <string name="password">Password</string>
     <string name="about_developer">About Developer</string>
@@ -116,6 +164,25 @@
     <string name="theme_sunset">Sunset</string>
     <string name="theme_forest">Forest</string>
     <string name="theme_grape">Grape</string>
+    <string name="theme_brand_blue">Brand Blue</string>
+    <string name="theme_lush_purple">Lush Purple</string>
+    <string name="theme_neon_night">Neon Night</string>
+    <string name="theme_soft_sand">Soft Sand</string>
+    <string name="theme_deep_space">Deep Space</string>
+    <string name="theme_minty_fresh">Minty Fresh</string>
 
-
+    <!-- Manual sections -->
+    <string name="manual_clipboard_title">Clipboard Management</string>
+    <string name="manual_clipboard_desc">Your copied texts are stored here. You can pin your favorite clips so they don\'t disappear later.</string>
+    <string name="manual_shortcuts_title">Text Shortcuts</string>
+    <string name="manual_shortcuts_desc">Type short triggers (e.g. \'omw\') and they will automatically expand into longer text (e.g. \'On my way\').</string>
+    <string name="manual_themes_title">Themes &amp; Customization</string>
+    <string name="manual_themes_desc">Use various themes to decorate your keyboard or set your own photo from the gallery as the background.</string>
+    <string name="privacy_title">Your Data is Safe</string>
+    <string name="privacy_desc">Nothing you write from the BanglaType keyboard ever goes outside your device. Words are kept only on your device in a special format for showing suggestions, which cannot be read directly. Even sensitive information like passwords or credit card info is never stored on your device. If someone expresses doubt about this on social media, please ask for proof. To stay completely safe, always install BanglaType keyboard from the Play Store. We are always committed to the security of your personal information. All data is offline.</string>
+    <string name="share_with_friends">Share with Friends</string>
+    <string name="share_app_text">Try BanglaType Keyboard - A fast and secure Bangla keyboard for Android! Get it here: https://play.google.com/store/apps/details?id=%1$s</string>
+    <string name="advanced_features">Advanced Features</string>
+    <string name="space_swipe_cursor_control">Spacebar cursor control</string>
+    <string name="swipe_delete_word">Swipe to delete word</string>
 </resources>

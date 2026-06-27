@@ -17,7 +17,7 @@ class VoiceInputManager(private val context: Context) {
     interface Callbacks {
         fun onReadyForSpeech() {}
         fun onPartialResult(text: String) {}
-        fun onFinalResult(text: String) {}
+        fun onFinalResult(text: String, isEndOfSession: Boolean) {}
         fun onRmsChanged(rmsdB: Float) {}
         fun onError(errorCode: Int) {}
         fun onEndOfSpeech() {}
@@ -27,25 +27,32 @@ class VoiceInputManager(private val context: Context) {
     var isListening = false
         private set
     private var callbacks: Callbacks? = null
+    private var currentLanguageTag: String = "en-US"
+    private var isContinuous: Boolean = false
 
     fun isAvailable() = SpeechRecognizer.isRecognitionAvailable(context)
 
-    fun start(languageTag: String, callbacks: Callbacks) {
+    fun start(languageTag: String, continuous: Boolean = false, callbacks: Callbacks) {
         if (!isAvailable()) {
             callbacks.onError(SpeechRecognizer.ERROR_RECOGNIZER_BUSY)
             return
         }
         this.callbacks = callbacks
+        this.currentLanguageTag = languageTag
+        this.isContinuous = continuous
         stopInternal()
+        startListeningInternal()
+    }
 
+    private fun startListeningInternal() {
         recognizer = SpeechRecognizer.createSpeechRecognizer(context).apply {
             setRecognitionListener(listener)
         }
 
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageTag)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, languageTag)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, currentLanguageTag)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, currentLanguageTag)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
@@ -56,6 +63,7 @@ class VoiceInputManager(private val context: Context) {
     }
 
     fun stop() {
+        isContinuous = false
         if (isListening) {
             recognizer?.stopListening()
         }
@@ -96,17 +104,28 @@ class VoiceInputManager(private val context: Context) {
         }
 
         override fun onError(error: Int) {
-            isListening = false
-            callbacks?.onError(error)
+            if (isContinuous && (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
+                startListeningInternal()
+            } else {
+                isListening = false
+                callbacks?.onError(error)
+            }
         }
 
         override fun onResults(results: Bundle?) {
-            isListening = false
             val text = results
                 ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 ?.firstOrNull()
                 .orEmpty()
-            callbacks?.onFinalResult(text)
+
+            val isEndOfSession = !isContinuous
+            callbacks?.onFinalResult(text, isEndOfSession)
+
+            if (isContinuous) {
+                startListeningInternal()
+            } else {
+                isListening = false
+            }
         }
 
         override fun onPartialResults(partialResults: Bundle?) {

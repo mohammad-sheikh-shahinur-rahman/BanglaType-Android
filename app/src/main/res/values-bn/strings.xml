@@ -1,12 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_launcher_name">BanglaType</string>
+    <string name="app_launcher_name">বাংলাটাইপ</string>
+    <string name="about_developer_label">ডেভেলপার</string>
+    <!-- Text shortcuts -->
+    <string name="manage_shortcuts">টেক্সট শর্টকাট পরিচালনা</string>
+    <string name="manage_shortcuts_summary">ছোট ট্রিগার যোগ করুন যা লেখার সময় বড় টেক্সটে পরিণত হবে।</string>
+    <string name="shortcuts_empty">আপনার এখনো কোনো টেক্সট শর্টকাট নেই।</string>
+    <string name="shortcut_trigger">শর্টকাট (যেমন omw)</string>
+    <string name="shortcut_expansion">পূর্ণ টেক্সট (যেমন on my way)</string>
+    <string name="enable_text_shortcuts">টেক্সট শর্টকাট চালু করুন</string>
+    <string name="trigger_cannot_be_empty">শর্টকাট খালি রাখা যাবে না</string>
+    <string name="expansion_cannot_be_empty">পূর্ণ টেক্সট খালি রাখা যাবে না</string>
+    <string name="trigger_already_exists">এই ট্রিগারের একটি শর্টকাট ইতিমধ্যে আছে</string>
+    <string name="export_shortcuts">টেক্সট শর্টকাট এক্সপোর্ট</string>
+    <string name="import_shortcuts">টেক্সট শর্টকাট ইম্পোর্ট</string>
     <string name="redirection_note">BanglaType কিবোর্ড হিসেবে ব্যবহারের জন্য পরবর্তী স্ক্রিনে এটি চালু করুন। চালু করার পর \'Back\' প্রেস করুন।</string>
     <string name="change_keyboard">কিবোর্ড পরিবর্তন করুন</string>
     <string name="test_keyboard">কিবোর্ড পরীক্ষা করুন</string>
-    <string name="type_something">কিছু লিখুন...</string>
+    <string name="type_something">এখানে কিছু লিখুন...</string>
+    <string name="user_manual">ব্যবহার বিধি</string>
+    <string name="settings">সেটিংস</string>
+    <string name="rate_us">রেট দিন</string>
+    <string name="about">আমাদের সম্পর্কে</string>
+    <string name="privacy_policy">প্রাইভেসী পলিসি</string>
+    <string name="ok">ঠিক আছে</string>
     <string name="about_developer">ডেভেলপার সম্পর্কে</string>
-    <string name="about_developer_name">আইটি আমাদের সমাজ .ইনকর্পোরেটেড</string>
+    <string name="about_developer_name">মোহাম্মদ শেখ শাহিনুর রহমান</string>
+    <string name="about_developer_designation">সফটওয়্যার ইঞ্জিনিয়ার, লেখক এবং সাইবার সিকিউরিটি বিশেষজ্ঞ</string>
+    <string name="about_copyright">© 2026 আইটি আমাদের সমাজ ইনকর্পোরেটেড</string>
+    <string name="about_linkedin_url">https://www.linkedin.com/in/mohammad-sheikh-shahinur-rahman/</string>
     <string name="follow_us_facebook">ফেসবুকে আমাদের অনুসরণ করুন</string>
     <string name="fast_secure_open_source">দ্রুত • নিরাপদ • ওপেন সোর্স</string>
     <string name="app_full_description">BanglaType একটি উন্নত, ফ্রি ও হালকা কিবোর্ড (IME) — স্মার্ট ফোনেটিক, ফিক্সড লেআউট বিল্ডার, অটো আপডেট এবং কথা-থেকে-লেখা সমর্থন করে।</string>
@@ -23,12 +45,17 @@
     <string name="clip_deleted">ক্লিপ মুছে ফেলা হয়েছে</string>
     <string name="voice_typing">ভয়েস টাইপিং</string>
     <string name="tap_to_speak">বলতে ট্যাপ করুন</string>
+    <string name="continuous_voice_typing">একটানা ভয়েস টাইপিং</string>
+    <string name="continuous_voice_typing_summary">নিজে বন্ধ না করা পর্যন্ত মাইক্রোফোন শুনতে থাকবে</string>
+    <string name="voice_typing_punctuation">ভয়েস বিরামচিহ্ন ও কমান্ড</string>
+    <string name="voice_typing_punctuation_summary">\"দাঁড়ি\" বা \"নতুন লাইন\" বললে সরাসরি সেই চিহ্ন বসে যাবে</string>
 
     <!-- Voice typing -->
     <string name="listening">শুনছি…</string>
     <string name="processing">প্রসেস হচ্ছে…</string>
     <string name="mic_permission_needed">ভয়েস টাইপিংয়ের জন্য মাইক্রোফোন অনুমতি প্রয়োজন</string>
     <string name="voice_permission_granted">মাইক্রোফোন চালু হয়েছে — শুরু করতে মাইকে ট্যাপ করুন</string>
+    <string name="translation_probhat">প্রভাত</string>
 
     <!-- Keyboard themes -->
     <string name="keyboard_theme">কিবোর্ড থিম</string>
@@ -45,4 +72,31 @@
     <string name="theme_sunset">সানসেট</string>
     <string name="theme_forest">ফরেস্ট</string>
     <string name="theme_grape">গ্রেপ</string>
+    <string name="theme_brand_blue">ব্র্যান্ড ব্লু</string>
+    <string name="theme_lush_purple">মনোরম বেগুনি</string>
+    <string name="theme_neon_night">নিয়ন নাইট</string>
+    <string name="theme_soft_sand">সফট স্যান্ড</string>
+    <string name="theme_deep_space">ডিপ স্পেস</string>
+    <string name="theme_minty_fresh">মিন্টি ফ্রেশ</string>
+
+    <!-- Manual sections -->
+    <string name="manual_clipboard_title">ক্লিপবোর্ড ব্যবস্থাপনা</string>
+    <string name="manual_clipboard_desc">আপনার কপি করা টেক্সটগুলো এখানে জমা থাকে। আপনি চাইলে প্রিয় ক্লিপগুলো পিন করে রাখতে পারেন যাতে পরে আর হারিয়ে না যায়।</string>
+    <string name="manual_shortcuts_title">টেক্সট শর্টকাট</string>
+    <string name="manual_shortcuts_desc">ছোট ট্রিগার (যেমন \'omw\') লিখলে তা স্বয়ংক্রিয়ভাবে বড় টেক্সটে (যেমন \'On my way\') পরিবর্তিত হবে।</string>
+    <string name="manual_themes_title">থিম ও কাস্টমাইজেশন</string>
+    <string name="manual_themes_desc">আপনার কিবোর্ডকে সাজাতে বিভিন্ন থিম ব্যবহার করুন অথবা গ্যালারি থেকে নিজের ছবি ব্যাকগ্রাউন্ড হিসেবে সেট করুন।</string>
+    <string name="privacy_title">আপনার ডাটা নিরাপদ</string>
+    <string name="privacy_desc">BanglaType কিবোর্ড থেকে আপনার লেখা কোনো কিছু কখনো আপনার ডিভাইসের বাইরে যায় না। শুধু সাজেশন দেখানোর জন্য লেখা থেকে শব্দগুলো একটি বিশেষ ফরমেটে শুধু আপনার ডিভাইসে রাখা হয়, যা সরাসরি পড়া যায় না। এমনকি গোপন তথ্য যেমন পাসওয়ার্ড বা ক্রেডিট কার্ডের তথ্য কখনো আপনার ডিভাইসেও সংরক্ষণ করা হয় না। সামাজিক যোগাযোগ মাধ্যমে কেউ এ ব্যাপারে সন্দেহ প্রকাশ করলে অনুগ্রহ করে প্রমাণ দেখাতে বলুন। সম্পূর্ণ নিরাপদ থাকতে, সবসময় BanglaType কিবোর্ড প্লে-স্টোর থেকে ইনস্টল করুন। আপনার ব্যক্তিগত তথ্যের সুরক্ষায় আমরা সর্বদা প্রতিশ্রুতিবদ্ধ। সব ডাটা অফলাইন।</string>
+    <string name="share_with_friends">শেয়ার করুন</string>
+    <string name="share_app_text">ব্যবহার করে দেখুন BanglaType কিবোর্ড - অ্যান্ড্রয়েডের জন্য একটি দ্রুত এবং নিরাপদ বাংলা কিবোর্ড! এটি ডাউনলোড করুন: https://play.google.com/store/apps/details?id=%1$s</string>
+    <string name="advanced_features">উন্নত ফিচারসমূহ</string>
+    <string name="space_swipe_cursor_control">স্পেসবার কার্সার কন্ট্রোল</string>
+    <string name="swipe_delete_word">সোয়াইপ করে শব্দ মুছে ফেলা</string>
+    <string name="vibration_strength">ভাইব্রেশন লেভেল</string>
+    <string name="vibration_default">সিস্টেম ডিফল্ট</string>
+    <string name="vibration_light">হালকা (Light)</string>
+    <string name="vibration_medium">মাঝারি (Medium)</string>
+    <string name="vibration_strong">তীব্র (Strong)</string>
+    <string name="auto_punctuation">ডাবল স্পেস দিলে দাড়ি (।) বসবে</string>
 </resources>

@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_launcher_name">BanglaType</string>
+    <!-- Text shortcuts -->
+    <string name="manage_shortcuts">টেক্সট শর্টকাট পরিচালনা</string>
+    <string name="manage_shortcuts_summary">ছোট ট্রিগার যোগ করুন যা লেখার সময় বড় টেক্সটে পরিণত হবে।</string>
+    <string name="shortcuts_empty">আপনার এখনো কোনো টেক্সট শর্টকাট নেই।</string>
+    <string name="shortcut_trigger">শর্টকাট (যেমন omw)</string>
+    <string name="shortcut_expansion">পূর্ণ টেক্সট (যেমন on my way)</string>
+    <string name="enable_text_shortcuts">টেক্সট শর্টকাট চালু করুন</string>
+    <string name="trigger_cannot_be_empty">শর্টকাট খালি রাখা যাবে না</string>
+    <string name="expansion_cannot_be_empty">পূর্ণ টেক্সট খালি রাখা যাবে না</string>
+    <string name="trigger_already_exists">এই ট্রিগারের একটি শর্টকাট ইতিমধ্যে আছে</string>
+    <string name="export_shortcuts">টেক্সট শর্টকাট এক্সপোর্ট</string>
+    <string name="import_shortcuts">টেক্সট শর্টকাট ইম্পোর্ট</string>
     <string name="redirection_note">BanglaType কিবোর্ড হিসেবে ব্যবহারের জন্য পরবর্তী স্ক্রিনে এটি চালু করুন। চালু করার পর \'Back\' প্রেস করুন।</string>
     <string name="change_keyboard">কিবোর্ড পরিবর্তন করুন</string>
     <string name="test_keyboard">কিবোর্ড পরীক্ষা করুন</string>
@@ -8,4 +20,5 @@
     <string name="about_developer">ডেভেলপার সম্পর্কে</string>
     <string name="about_developer_name">আইটি আমাদেরসমাজ .ইনকর্পোরেটেড</string>
     <string name="follow_us_facebook">ফেসবুকে আমাদের অনুসরণ করুন</string>
+    <string name="translation_probhat">প্রভাত</string>
 </resources>

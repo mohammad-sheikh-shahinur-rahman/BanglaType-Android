@@ -1053,6 +1053,9 @@
     </string>
 
     <string name="translation_arabic">Arabic</string>
+    <string name="translation_avro">Avro Phonetic</string>
+    <string name="translation_jatiyo">Jatiyo</string>
+    <string name="translation_probhat">Probhat</string>
     <string name="translation_azerbaijani">Azerbaijani</string>
     <string name="translation_belarusian">Belarusan</string>
     <string name="translation_bengali">Bengali</string>

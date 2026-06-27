@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.itamadersomajinc.banglatype.interfaces.ClipsDao
 import com.itamadersomajinc.banglatype.models.Clip
 
-@Database(entities = [Clip::class], version = 1)
+@Database(entities = [Clip::class], version = 2)
 abstract class ClipsDatabase : RoomDatabase() {
 
     abstract fun ClipsDao(): ClipsDao
@@ -19,7 +19,9 @@ abstract class ClipsDatabase : RoomDatabase() {
             if (db == null) {
                 synchronized(ClipsDatabase::class) {
                     if (db == null) {
-                        db = Room.databaseBuilder(context, ClipsDatabase::class.java, "clips.db").build()
+                        db = Room.databaseBuilder(context, ClipsDatabase::class.java, "clips.db")
+                            .fallbackToDestructiveMigration()
+                            .build()
                         db!!.openHelper.setWriteAheadLoggingEnabled(true)
                     }
                 }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="themes"
+        android:enabled="true"
+        android:icon="@drawable/ic_feature_layout"
+        android:shortcutShortLabel="@string/keyboard_theme">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.itamadersomajinc.banglatype"
+            android:targetClass="com.itamadersomajinc.banglatype.activities.KeyboardThemePickerActivity" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="clipboard"
+        android:enabled="true"
+        android:icon="@drawable/ic_feature_voice"
+        android:shortcutShortLabel="@string/clipboard">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.itamadersomajinc.banglatype"
+            android:targetClass="com.itamadersomajinc.banglatype.activities.ManageClipboardItemsActivity" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

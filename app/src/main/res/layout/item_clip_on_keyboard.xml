@@ -9,11 +9,23 @@
 
     <com.itamadersomajinc.banglatype.commons.views.MyTextView
         android:id="@+id/clip_value"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toStartOf="@+id/clip_pin"
         android:maxLines="10"
         android:padding="@dimen/medium_margin"
         android:textSize="@dimen/normal_text_size"
         tools:text="Hello, how are you?" />
+
+    <ImageView
+        android:id="@+id/clip_pin"
+        android:layout_width="@dimen/toolbar_icon_height"
+        android:layout_height="@dimen/toolbar_icon_height"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/pin_text"
+        android:padding="@dimen/small_margin"
+        android:src="@drawable/ic_pin_vector" />
 
 </RelativeLayout>

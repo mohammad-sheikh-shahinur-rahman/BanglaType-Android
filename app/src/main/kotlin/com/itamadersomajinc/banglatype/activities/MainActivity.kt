@@ -1,6 +1,7 @@
 package com.itamadersomajinc.banglatype.activities
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.RippleDrawable
 import android.os.Bundle
@@ -29,7 +30,7 @@ class MainActivity : SimpleActivity() {
 
         binding.apply {
             setupEdgeToEdge(padBottomSystem = listOf(mainNestedScrollview))
-            setupMaterialScrollListener(binding.mainNestedScrollview, binding.mainAppbar)
+            setupMaterialScrollListener(mainNestedScrollview, mainAppbar)
 
             changeKeyboardHolder.setOnClickListener {
                 inputMethodManager.showInputMethodPicker()
@@ -39,10 +40,27 @@ class MainActivity : SimpleActivity() {
                 launchSettings()
             }
 
-            facebookLink.setOnClickListener {
-                launchViewIntent(R.string.about_facebook_url)
+            manualHolder.setOnClickListener {
+                startActivity(Intent(this@MainActivity, ManualActivity::class.java))
+            }
+
+            shareHolder.setOnClickListener {
+                shareApp()
+            }
+
+            aboutHolder.setOnClickListener {
+                launchAbout()
             }
         }
+    }
+
+    private fun shareApp() {
+        val shareText = getString(R.string.share_app_text, BuildConfig.BASE_APPLICATION_ID)
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+        startActivity(Intent.createChooser(intent, getString(R.string.share_with_friends)))
     }
 
     override fun onResume() {
@@ -68,6 +86,7 @@ class MainActivity : SimpleActivity() {
 
         updateTextColors(binding.mainNestedScrollview)
         updateChangeKeyboardColor()
+        applyHeroColors()
     }
 
     private fun setupOptionsMenu() {
@@ -88,29 +107,41 @@ class MainActivity : SimpleActivity() {
     }
 
     private fun launchAbout() {
-        AboutDialog(this, BuildConfig.VERSION_NAME)
+        AboutDialog(this, "1.0.0")
     }
 
     private fun updateChangeKeyboardColor() {
-        val applyBackground =
-            resources.getDrawable(R.drawable.button_background_rounded, theme) as RippleDrawable
-        (applyBackground as LayerDrawable).findDrawableByLayerId(R.id.button_background_holder)
-            .applyColorFilter(getProperPrimaryColor())
+        val primaryColor = getProperPrimaryColor()
+        val contrastColor = primaryColor.getContrastColor()
+        val isEnabled = isKeyboardEnabled()
 
-        binding.changeKeyboard.apply {
-            background = applyBackground
-            setTextColor(getProperPrimaryColor().getContrastColor())
+        binding.changeKeyboardCard.setCardBackgroundColor(if (isEnabled) primaryColor else 0xFFFFC107.toInt()) // Amber for not enabled
+        binding.changeKeyboard.setTextColor(contrastColor)
+        binding.changeKeyboardIcon.applyColorFilter(contrastColor)
+        
+        binding.changeKeyboard.text = if (isEnabled) getString(R.string.change_keyboard) else "কিবোর্ড চালু করুন (Enable Keyboard)"
+        binding.changeKeyboardIcon.setImageResource(if (isEnabled) R.drawable.ic_check_vector else R.drawable.ic_language_outlined)
+    }
+
+    private fun applyHeroColors() {
+        val primaryColor = getProperPrimaryColor()
+        val contrastColor = primaryColor.getContrastColor()
+        val isEnabled = isKeyboardEnabled()
+        
+        binding.heroCard.setCardBackgroundColor(primaryColor)
+        listOf(binding.heroTitle, binding.heroTagline, binding.heroDescription)
+            .forEach { it.setTextColor(contrastColor) }
+
+        if (isEnabled) {
+            binding.heroTagline.text = "BanglaType is active and ready!"
         }
 
-        val facebookBackground =
-            resources.getDrawable(R.drawable.button_background_rounded, theme) as RippleDrawable
-        (facebookBackground as LayerDrawable).findDrawableByLayerId(R.id.button_background_holder)
-            .applyColorFilter(getProperPrimaryColor())
-
-        binding.facebookLink.apply {
-            background = facebookBackground
-            setTextColor(getProperPrimaryColor().getContrastColor())
-        }
+        listOf(
+            binding.settingsIcon,
+            binding.manualIcon,
+            binding.shareIcon,
+            binding.aboutIcon
+        ).forEach { it.applyColorFilter(primaryColor) }
     }
 
     private fun isKeyboardEnabled(): Boolean {

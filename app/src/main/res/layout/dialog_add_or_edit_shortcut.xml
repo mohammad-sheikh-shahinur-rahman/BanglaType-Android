@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialog_holder"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="@dimen/activity_margin">
+
+    <com.itamadersomajinc.banglatype.commons.views.MyTextInputLayout
+        android:id="@+id/add_shortcut_trigger_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/activity_margin"
+        android:layout_marginEnd="@dimen/activity_margin"
+        android:hint="@string/shortcut_trigger">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/add_shortcut_trigger"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:textSize="@dimen/bigger_text_size" />
+
+    </com.itamadersomajinc.banglatype.commons.views.MyTextInputLayout>
+
+    <com.itamadersomajinc.banglatype.commons.views.MyTextInputLayout
+        android:id="@+id/add_shortcut_expansion_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/add_shortcut_trigger_hint"
+        android:layout_marginStart="@dimen/activity_margin"
+        android:layout_marginTop="@dimen/activity_margin"
+        android:layout_marginEnd="@dimen/activity_margin"
+        android:hint="@string/shortcut_expansion">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/add_shortcut_expansion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine"
+            android:textSize="@dimen/bigger_text_size" />
+
+    </com.itamadersomajinc.banglatype.commons.views.MyTextInputLayout>
+</RelativeLayout>

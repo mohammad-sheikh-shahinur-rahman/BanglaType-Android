@@ -69,17 +69,27 @@ import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.activities.SettingsActivity
 import com.itamadersomajinc.banglatype.databinding.KeyboardViewKeyboardBinding
 import com.itamadersomajinc.banglatype.extensions.config
+import com.itamadersomajinc.banglatype.extensions.shortcutsDB
 import com.itamadersomajinc.banglatype.extensions.getKeyboardBackgroundColor
 import com.itamadersomajinc.banglatype.extensions.getKeyboardBackgroundDrawable
 import com.itamadersomajinc.banglatype.extensions.hasKeyboardBackgroundDrawable
 import com.itamadersomajinc.banglatype.extensions.getVoiceInputLocale
 import com.itamadersomajinc.banglatype.extensions.getKeyboardLanguageText
+import com.itamadersomajinc.banglatype.extensions.isBanglaLanguage
+import com.itamadersomajinc.banglatype.extensions.isBanglaScriptLanguage
+import com.itamadersomajinc.banglatype.extensions.toBengaliDigitOrSelf
+import com.itamadersomajinc.banglatype.extensions.toBengaliString
+import com.itamadersomajinc.banglatype.extensions.toAsciiString
 import com.itamadersomajinc.banglatype.commons.extensions.toast
 import com.itamadersomajinc.banglatype.extensions.getPreferredVoiceInputMethod
 import com.itamadersomajinc.banglatype.extensions.getSelectedLanguagesSorted
 import com.itamadersomajinc.banglatype.extensions.getStrokeColor
 import com.itamadersomajinc.banglatype.extensions.safeStorageContext
 import com.itamadersomajinc.banglatype.helpers.HEIGHT_PERCENTAGE
+import com.itamadersomajinc.banglatype.helpers.ONE_HANDED_OFF
+import com.itamadersomajinc.banglatype.helpers.ONE_HANDED_LEFT
+import com.itamadersomajinc.banglatype.helpers.ONE_HANDED_RIGHT
+import com.itamadersomajinc.banglatype.helpers.ONE_HANDED_WIDTH_PERCENT
 import com.itamadersomajinc.banglatype.helpers.KEYBOARD_LANGUAGE
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_ARABIC
 import com.itamadersomajinc.banglatype.helpers.AvroParser
@@ -175,6 +185,10 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
     private val avroComposing = StringBuilder()
     private val isAvro get() = baseContext.config.keyboardLanguage == LANGUAGE_BANGLA_AVRO
 
+    // In-memory trigger -> expansion map for text shortcuts; reloaded on every onStartInput so edits
+    // made in the management screen are picked up without a per-keystroke database hit.
+    private var shortcutsMap: Map<String, String> = emptyMap()
+
     private lateinit var binding: KeyboardViewKeyboardBinding
 
     private var voiceInputManager: VoiceInputManager? = null
@@ -192,6 +206,7 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             setEditorInfo(currentInputEditorInfo)
             setupEdgeToEdge()
             mOnKeyboardActionListener = this@SimpleKeyboardIME
+            updateOneHandedMode(config.oneHandedMode)
         }
 
         return binding.root
@@ -230,6 +245,13 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         if (config.showSuggestions) {
             ensureBackgroundThread { PredictionEngine.preload(this) }
         }
+        ensureBackgroundThread {
+            shortcutsMap = if (config.enableShortcuts) {
+                shortcutsDB.getShortcuts().associate { it.trigger to it.expansion }
+            } else {
+                emptyMap()
+            }
+        }
         // Auto-select Google voice typing (or any available) so the mic works without setup.
         if (config.voiceInputMethod.isEmpty()) {
             ensureBackgroundThread { getPreferredVoiceInputMethod()?.let { config.voiceInputMethod = it.first.id } }
@@ -252,7 +274,9 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         }
 
         val editorInfo = currentInputEditorInfo
-        if (config.enableSentencesCapitalization && editorInfo != null && editorInfo.inputType != TYPE_NULL) {
+        if (config.enableSentencesCapitalization && !isBanglaScriptLanguage(config.keyboardLanguage) &&
+            editorInfo != null && editorInfo.inputType != TYPE_NULL
+        ) {
             if (currentInputConnection.getCursorCapsMode(editorInfo.inputType) != 0) {
                 keyboard?.setShifted(ShiftState.ON_ONE_CHAR)
                 keyboardView?.invalidateAllKeys()
@@ -360,6 +384,7 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
             MyKeyboard.KEYCODE_ENTER -> {
                 learnLastWord()
+                maybeEvaluateMath(inputConnection)
                 val imeOptionsActionId = getImeOptionsActionId()
                 if (imeOptionsActionId != IME_ACTION_NONE) {
                     inputConnection.performEditorAction(imeOptionsActionId)
@@ -410,6 +435,7 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             }
 
             MyKeyboard.KEYCODE_POPUP_EMOJI -> keyboardView?.openEmojiPalette()
+            MyKeyboard.KEYCODE_POPUP_TEXT_EDIT -> keyboardView?.openTextEditingPanel()
             MyKeyboard.KEYCODE_POPUP_SETTINGS -> Intent(this, SettingsActivity::class.java)
                 .apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -426,6 +452,16 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
                     } else {
                         codeChar = Character.toUpperCase(codeChar)
                     }
+                }
+
+                // Auto-punctuation: a quick second space after a word becomes a sentence-ending
+                // full stop plus a space ("। " for Bangla, ". " otherwise), like most keyboards.
+                if (code == MyKeyboard.KEYCODE_SPACE && keyboardMode == KEYBOARD_LETTERS &&
+                    inputTypeClass == TYPE_CLASS_TEXT && maybeAutoPunctuate(inputConnection)
+                ) {
+                    updateShiftKeyState()
+                    updateSuggestions()
+                    return
                 }
 
                 // Avro Phonetic: accumulate the Latin letter into the current word and show the
@@ -483,11 +519,95 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             }
         }
 
+        // Expand a text shortcut once the user types a word separator (space or punctuation).
+        // Special keys (shift, delete, enter, mode change) use negative codes and are skipped.
+        if (code > 0 && !Character.isLetterOrDigit(code.toChar())) {
+            maybeExpandShortcut(inputConnection)
+        }
+
         // A space ends the current word — learn it for future suggestions.
         if (code == MyKeyboard.KEYCODE_SPACE) {
             learnLastWord()
+            maybeEvaluateMath(inputConnection)
         }
         updateSuggestions()
+    }
+
+    /**
+     * If the word just before the cursor looks like a math expression (e.g. "5+5"), evaluates it
+     * and replaces that word with the result.
+     */
+    private fun maybeEvaluateMath(inputConnection: InputConnection) {
+        val before = inputConnection.getTextBeforeCursor(64, 0)?.toString() ?: return
+        val prefix = currentMathExpressionPrefix(before)
+        if (prefix.length > 1 && prefix.any { it.isDigit() || it in '০'..'৯' } &&
+            (prefix.contains("+") || prefix.contains("-") || prefix.contains("*") || prefix.contains("/"))) {
+            val result = tryEvaluateMath(prefix)
+            if (result != prefix) {
+                inputConnection.beginBatchEdit()
+                inputConnection.deleteSurroundingText(prefix.length, 0)
+                inputConnection.commitText(result, 1)
+                inputConnection.endBatchEdit()
+            }
+        }
+    }
+
+    private fun currentMathExpressionPrefix(s: String): String {
+        var start = s.length
+        while (start > 0 && (Character.isLetterOrDigit(s[start - 1]) || "+-*/().".contains(s[start - 1]))) start--
+        return s.substring(start)
+    }
+
+    /**
+     * Double-space → sentence end: if the cursor is preceded by "[letter/digit][space]" and the user
+     * presses space again, swap that previous space for a full stop and a space ("। " for Bangla,
+     * ". " otherwise). Returns true when it acted, so the caller skips committing the normal space.
+     */
+    private fun maybeAutoPunctuate(inputConnection: InputConnection): Boolean {
+        if (!config.autoPunctuation) {
+            return false
+        }
+        if (isAvro && avroComposing.isNotEmpty()) {
+            return false
+        }
+        val before = inputConnection.getTextBeforeCursor(2, 0) ?: return false
+        if (before.length < 2 || before[1] != ' ' || !Character.isLetterOrDigit(before[0])) {
+            return false
+        }
+        val sentenceEnd = if (isBanglaLanguage(config.keyboardLanguage)) "। " else ". "
+        inputConnection.beginBatchEdit()
+        inputConnection.deleteSurroundingText(1, 0)
+        inputConnection.commitText(sentenceEnd, 1)
+        inputConnection.endBatchEdit()
+        return true
+    }
+
+    /**
+     * Replaces a just-typed shortcut trigger with its expansion. Call right after a word separator
+     * (space/punctuation) has been committed: the buffer then ends with [trigger][separator], so we
+     * look back at the word preceding the separator and swap it for the configured expansion.
+     */
+    private fun maybeExpandShortcut(inputConnection: InputConnection) {
+        if (!config.enableShortcuts || shortcutsMap.isEmpty()) {
+            return
+        }
+        val before = inputConnection.getTextBeforeCursor(64, 0)?.toString() ?: return
+        if (before.isEmpty()) {
+            return
+        }
+        val separator = before.last()
+        if (isWordChar(separator)) {
+            return
+        }
+        val trigger = currentWordPrefix(before.dropLast(1))
+        if (trigger.isEmpty()) {
+            return
+        }
+        val expansion = shortcutsMap[trigger] ?: return
+        inputConnection.beginBatchEdit()
+        inputConnection.deleteSurroundingText(trigger.length + 1, 0)
+        inputConnection.commitText(expansion + separator, 1)
+        inputConnection.endBatchEdit()
     }
 
     private fun getCountToDelete(inputConnection: InputConnection): Int {
@@ -518,7 +638,9 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             keyboard = constructKeyboard(getKeyboardLayoutXML(), enterKeyType)
 
             val editorInfo = currentInputEditorInfo
-            if (editorInfo != null && editorInfo.inputType != TYPE_NULL && keyboard?.mShiftState != ShiftState.ON_PERMANENT) {
+            if (!isBanglaScriptLanguage(config.keyboardLanguage) && editorInfo != null &&
+                editorInfo.inputType != TYPE_NULL && keyboard?.mShiftState != ShiftState.ON_PERMANENT
+            ) {
                 if (currentInputConnection.getCursorCapsMode(editorInfo.inputType) != 0) {
                     keyboard?.setShifted(ShiftState.ON_ONE_CHAR)
                 }
@@ -537,14 +659,149 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         moveCursor(true)
     }
 
+    override fun onDeleteWord() {
+        val inputConnection = currentInputConnection ?: return
+
+        // Avro: trim the live composing buffer instead of touching committed text.
+        if (isAvro && avroComposing.isNotEmpty()) {
+            avroComposing.clear()
+            inputConnection.finishComposingText()
+            updateShiftKeyState()
+            updateSuggestions()
+            return
+        }
+
+        // If something is selected, a word-delete just removes the selection.
+        val selectedText = inputConnection.getSelectedText(0)
+        if (!TextUtils.isEmpty(selectedText)) {
+            inputConnection.commitText("", 1)
+            updateSuggestions()
+            return
+        }
+
+        val before = inputConnection.getTextBeforeCursor(100, 0) ?: return
+        if (before.isEmpty()) return
+
+        // Delete the run of trailing whitespace, then the word before it.
+        var end = before.length
+        while (end > 0 && before[end - 1].isWhitespace()) end--
+        while (end > 0 && !before[end - 1].isWhitespace()) end--
+        val count = before.length - end
+        inputConnection.deleteSurroundingText(if (count > 0) count else 1, 0)
+        updateSuggestions()
+    }
+
+    override fun onEditCursorMove(keyCode: Int, withShift: Boolean) {
+        val inputConnection = currentInputConnection ?: return
+        val meta = if (withShift) KeyEvent.META_SHIFT_ON or KeyEvent.META_SHIFT_LEFT_ON else 0
+        inputConnection.sendKeyEvent(KeyEvent(0, 0, KeyEvent.ACTION_DOWN, keyCode, 0, meta))
+        inputConnection.sendKeyEvent(KeyEvent(0, 0, KeyEvent.ACTION_UP, keyCode, 0, meta))
+        keyboardView?.performHapticHandleMove()
+    }
+
+    override fun onEditContextAction(menuActionId: Int) {
+        currentInputConnection?.performContextMenuAction(menuActionId)
+    }
+
     override fun onText(text: String) {
-        currentInputConnection?.commitText(text, 1)
+        var textToCommit = text
+        if (textToCommit.length > 1 && (textToCommit.contains("+") || textToCommit.contains("-") || textToCommit.contains("*") || textToCommit.contains("/"))) {
+            textToCommit = tryEvaluateMath(textToCommit)
+        }
+        currentInputConnection?.commitText(textToCommit, 1)
+    }
+
+    private fun tryEvaluateMath(text: String): String {
+        return try {
+            val isBengali = text.any { it in '০'..'৯' }
+            val expression = text.toAsciiString().trim()
+            if (!expression.any { it.isDigit() }) return text
+            
+            // Simple regex based evaluator for basic expressions
+            val result = object : Any() {
+                fun eval(str: String): Double {
+                    return object : Any() {
+                        var pos = -1
+                        var ch = 0
+                        fun nextChar() {
+                            ch = if (++pos < str.length) str[pos].toInt() else -1
+                        }
+
+                        fun eat(charToEat: Int): Boolean {
+                            while (ch == ' '.toInt()) nextChar()
+                            if (ch == charToEat) {
+                                nextChar()
+                                return true
+                            }
+                            return false
+                        }
+
+                        fun parse(): Double {
+                            nextChar()
+                            val x = parseExpression()
+                            if (pos < str.length) return Double.NaN
+                            return x
+                        }
+
+                        fun parseExpression(): Double {
+                            var x = parseTerm()
+                            while (true) {
+                                if (eat('+'.toInt())) x += parseTerm()
+                                else if (eat('-'.toInt())) x -= parseTerm()
+                                else return x
+                            }
+                        }
+
+                        fun parseTerm(): Double {
+                            var x = parseFactor()
+                            while (true) {
+                                if (eat('*'.toInt())) x *= parseFactor()
+                                else if (eat('/'.toInt())) x /= parseFactor()
+                                else return x
+                            }
+                        }
+
+                        fun parseFactor(): Double {
+                            if (eat('+'.toInt())) return parseFactor()
+                            if (eat('-'.toInt())) return -parseFactor()
+                            var x: Double
+                            val startPos = pos
+                            if (eat('('.toInt())) {
+                                x = parseExpression()
+                                eat(')'.toInt())
+                            } else if (ch >= '0'.toInt() && ch <= '9'.toInt() || ch == '.'.toInt()) {
+                                while (ch >= '0'.toInt() && ch <= '9'.toInt() || ch == '.'.toInt()) nextChar()
+                                x = str.substring(startPos, pos).toDouble()
+                            } else {
+                                return Double.NaN
+                            }
+                            return x
+                        }
+                    }.parse()
+                }
+            }.eval(expression)
+
+            if (result.isNaN()) text else {
+                val longRes = result.toLong()
+                val resString = if (result == longRes.toDouble()) longRes.toString() else result.toString()
+                if (isBengali) resString.toBengaliString() else resString
+            }
+        } catch (e: Exception) {
+            text
+        }
     }
 
     override fun reloadKeyboard() {
         val keyboard = createNewKeyboard()
         this.keyboard = keyboard
         keyboardView?.setKeyboard(keyboard)
+    }
+
+    override fun onOneHandedModeChanged(mode: Int) {
+        config.oneHandedMode = mode
+        // Rebuild at the new width, then re-apply the side alignment / controls on the holder.
+        reloadKeyboard()
+        keyboardView?.updateOneHandedMode(mode)
     }
 
     override fun changeInputMethod(id: String, subtype: InputMethodSubtype) {
@@ -565,20 +822,25 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
         keyboardView?.setVoiceListening(true)
         keyboardView?.setVoicePartialText("")
-        manager.start(getVoiceInputLocale(), object : VoiceInputManager.Callbacks {
+        manager.start(getVoiceInputLocale(), continuous = config.continuousVoiceTyping, object : VoiceInputManager.Callbacks {
             override fun onPartialResult(text: String) {
                 keyboardView?.setVoicePartialText(text)
             }
 
-            override fun onFinalResult(text: String) {
+            override fun onFinalResult(text: String, isEndOfSession: Boolean) {
                 if (text.isNotBlank()) {
-                    currentInputConnection?.commitText("$text ", 1)
+                    val processedText = if (config.voiceTypingPunctuation) applyVoiceCommands(text) else text
+                    currentInputConnection?.commitText("$processedText ", 1)
                     learnLastWord()
                     updateShiftKeyState()
                     updateSuggestions()
                 }
-                keyboardView?.setVoiceListening(false)
-                keyboardView?.setVoicePartialText("")
+                if (isEndOfSession) {
+                    keyboardView?.setVoiceListening(false)
+                    keyboardView?.setVoicePartialText("")
+                } else {
+                    keyboardView?.setVoicePartialText("")
+                }
             }
 
             override fun onRmsChanged(rmsdB: Float) {
@@ -594,6 +856,28 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
                 keyboardView?.setVoicePartialText("")
             }
         })
+    }
+
+    private fun applyVoiceCommands(text: String): String {
+        var result = text
+        val locale = getVoiceInputLocale()
+        if (locale == "bn-BD") {
+            result = result
+                .replace("দাঁড়ি", "।")
+                .replace("কমা", ",")
+                .replace("প্রশ্নবোধক", "?")
+                .replace("বিস্ময়সূচক", "!")
+                .replace("নতুন লাইন", "\n")
+        } else {
+            result = result
+                .replace("period", ".")
+                .replace("full stop", ".")
+                .replace("comma", ",")
+                .replace("question mark", "?")
+                .replace("exclamation mark", "!")
+                .replace("new line", "\n")
+        }
+        return result
     }
 
     override fun onStopVoiceInput() {
@@ -943,8 +1227,40 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
     }
 
     private fun constructKeyboard(keyboardXml: Int, enterKeyType: Int): MyKeyboard {
-        val keyboard = MyKeyboard(this, keyboardXml, enterKeyType)
+        // In one-handed mode the keyboard is built at a reduced width so its keys reflow into a
+        // narrower block; MyKeyboardView then shifts that block to the chosen side.
+        val widthOverride = if (config.oneHandedMode != ONE_HANDED_OFF) {
+            resources.displayMetrics.widthPixels * ONE_HANDED_WIDTH_PERCENT / 100
+        } else {
+            null
+        }
+        val keyboard = MyKeyboard(this, keyboardXml, enterKeyType, widthOverride)
+        if (shouldUseBanglaDigits()) {
+            applyBanglaDigits(keyboard)
+        }
         return adjustBottomRow(keyboard)
+    }
+
+    /**
+     * Bengali numerals are used for digits only while typing a Bangla language into a plain text field.
+     * Number/phone/date fields keep ASCII digits so the host app can still parse the value.
+     */
+    private fun shouldUseBanglaDigits(): Boolean =
+        isBanglaLanguage(config.keyboardLanguage) && inputTypeClass == TYPE_CLASS_TEXT
+
+    /** Rewrites digit keys (label + committed code + corner hint) on [keyboard] to Bengali numerals. */
+    private fun applyBanglaDigits(keyboard: MyKeyboard) {
+        keyboard.mKeys?.forEach { key ->
+            val label = key.label
+            if (label.length == 1 && label[0] in '0'..'9' && key.code == label[0].code) {
+                val bengali = label[0].toBengaliDigitOrSelf()
+                key.label = bengali.toString()
+                key.code = bengali.code
+            }
+            if (key.topSmallNumber.isNotEmpty()) {
+                key.topSmallNumber = key.topSmallNumber.map { it.toBengaliDigitOrSelf() }.joinToString("")
+            }
+        }
     }
 
     // hacky, but good enough for now

@@ -75,6 +75,20 @@ class ClipsKeyboardAdapter(
                 removeUnderlines()
                 setTextColor(textColor)
             }
+
+            clipPin.apply {
+                applyColorFilter(textColor)
+                setImageResource(if (clip.pinned) R.drawable.ic_pin_filled_vector else R.drawable.ic_pin_vector)
+                setOnLongClickListener { context.toast(R.string.pin_text); true }
+                setOnClickListener {
+                    val id = clip.id ?: return@setOnClickListener
+                    if (id < 0) return@setOnClickListener
+                    ensureBackgroundThread {
+                        ClipsHelper(context).setPinned(id, !clip.pinned)
+                        refreshClipsListener.refreshClips()
+                    }
+                }
+            }
         }
     }
 
@@ -120,6 +134,17 @@ class ClipsKeyboardAdapter(
                 if (any is Clip) {
                     setOnClickListener {
                         itemClick.invoke(any)
+                    }
+                    setOnLongClickListener {
+                        val id = any.id
+                        if (id != null && id >= 0) {
+                            ensureBackgroundThread {
+                                ClipsHelper(context).delete(id)
+                                refreshClipsListener.refreshClips()
+                                context.toast(R.string.clip_deleted)
+                            }
+                        }
+                        true
                     }
                 }
             }

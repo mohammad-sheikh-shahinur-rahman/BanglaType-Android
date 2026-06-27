@@ -32,9 +32,13 @@ import com.itamadersomajinc.banglatype.commons.models.RadioItem
 import com.itamadersomajinc.banglatype.commons.views.MyTextView
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.databases.ClipsDatabase
+import com.itamadersomajinc.banglatype.databases.PredictionDatabase
+import com.itamadersomajinc.banglatype.databases.ShortcutsDatabase
 import com.itamadersomajinc.banglatype.helpers.Config
 import com.itamadersomajinc.banglatype.helpers.INPUT_METHOD_SUBTYPE_VOICE
 import com.itamadersomajinc.banglatype.interfaces.ClipsDao
+import com.itamadersomajinc.banglatype.interfaces.PredictionsDao
+import com.itamadersomajinc.banglatype.interfaces.ShortcutsDao
 
 val Context.config: Config get() = Config.newInstance(applicationContext.safeStorageContext)
 
@@ -62,6 +66,12 @@ val Context.inputMethodManager: InputMethodManager
 
 val Context.clipsDB: ClipsDao
     get() = ClipsDatabase.getInstance(applicationContext.safeStorageContext).ClipsDao()
+
+val Context.predictionsDB: PredictionsDao
+    get() = PredictionDatabase.getInstance(applicationContext.safeStorageContext).PredictionsDao()
+
+val Context.shortcutsDB: ShortcutsDao
+    get() = ShortcutsDatabase.getInstance(applicationContext.safeStorageContext).ShortcutsDao()
 
 fun Context.getCurrentClip(): String? {
     val clipboardManager = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
@@ -202,6 +212,26 @@ fun Context.getVoiceInputMethods(
 fun Context.getCurrentVoiceInputMethod(
     inputMethods: List<Pair<InputMethodInfo, InputMethodSubtype>> = getVoiceInputMethods()
 ) = inputMethods.find { it.first.id == config.voiceInputMethod }
+
+/** Best available voice input method, preferring Google voice typing, else the first available. */
+fun Context.getPreferredVoiceInputMethod(
+    inputMethods: List<Pair<InputMethodInfo, InputMethodSubtype>> = getVoiceInputMethods()
+): Pair<InputMethodInfo, InputMethodSubtype>? {
+    return inputMethods.firstOrNull { it.first.packageName.startsWith("com.google.android") }
+        ?: inputMethods.firstOrNull()
+}
+
+/** Resolves the configured voice method, falling back to (and remembering) the preferred one. */
+fun Context.getOrAutoSelectVoiceInputMethod(): Pair<InputMethodInfo, InputMethodSubtype>? {
+    val inputMethods = getVoiceInputMethods()
+    val current = getCurrentVoiceInputMethod(inputMethods)
+    if (current != null) {
+        return current
+    }
+    val preferred = getPreferredVoiceInputMethod(inputMethods) ?: return null
+    config.voiceInputMethod = preferred.first.id
+    return preferred
+}
 
 fun Context.getVoiceInputRadioItems(
     inputMethods: List<Pair<InputMethodInfo, InputMethodSubtype>> = getVoiceInputMethods()

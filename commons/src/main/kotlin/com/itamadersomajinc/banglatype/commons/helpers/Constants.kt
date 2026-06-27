@@ -51,7 +51,7 @@ const val SHA1 = "SHA-1"
 const val SHA256 = "SHA-256"
 const val SHORT_ANIMATION_DURATION = 150L
 const val DEFAULT_ANIMATION_DURATION = 300L
-val DARK_GREY = 0xFF333333.toInt()
+val DARK_GREY = 0xFF002040.toInt()
 
 const val LOWER_ALPHA = 0.25f
 const val MEDIUM_ALPHA = 0.5f

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/splash_background">
+
+    <!-- Decorative Glow behind logo -->
+    <View
+        android:id="@+id/splash_glow"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_gravity="center"
+        android:alpha="0"
+        android:background="@drawable/ripple_all_corners_medium"
+        android:backgroundTint="@color/color_primary" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/splash_logo"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:contentDescription="@string/app_launcher_name"
+            android:padding="4dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/logo_banglatype"
+            app:shapeAppearanceOverlay="@style/CircleImage"
+            app:strokeColor="@android:color/white"
+            app:strokeWidth="3dp" />
+
+        <com.itamadersomajinc.banglatype.commons.views.MyTextView
+            android:id="@+id/splash_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/app_launcher_name"
+            android:textColor="@android:color/white"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:shadowColor="#80000000"
+            android:shadowDx="0"
+            android:shadowDy="2"
+            android:shadowRadius="4"/>
+
+        <TextView
+            android:id="@+id/splash_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/writing_be_vivid"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="italic"
+            android:letterSpacing="0.05"
+            android:alpha="0.9" />
+
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/splash_loader"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="64dp"
+        android:indeterminateTint="@android:color/white"
+        android:alpha="0" />
+
+</FrameLayout>

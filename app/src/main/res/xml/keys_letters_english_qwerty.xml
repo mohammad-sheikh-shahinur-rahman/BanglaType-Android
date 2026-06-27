@@ -130,9 +130,10 @@
         <Key app:keyLabel="x" />
         <Key
             app:keyLabel="c"
-            app:popupCharacters="çčć¢"
-            app:popupKeyboard="@xml/keyboard_popup_template" />
-        <Key app:keyLabel="v" />
+            app:keyRole="copy" />
+        <Key
+            app:keyLabel="v"
+            app:keyRole="paste" />
         <Key app:keyLabel="b" />
         <Key
             app:keyLabel="n"
