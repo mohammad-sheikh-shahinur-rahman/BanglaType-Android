@@ -38,7 +38,7 @@ ezVcard = "0.12.2"
 #gson
 gson = "2.13.2"
 #jodaTime
-jodaTime = "2.14.0"
+jodaTime = "2.14.2"
 #KSP
 ksp = "2.3.9"
 #Detekt
