@@ -1,4 +1,6 @@
 build/
+/app/core/
+keystore
 /local.properties
 /.idea/
 .DS_Store
