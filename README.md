@@ -1,179 +1,103 @@
-# বাংলাটাইপ কীবোর্ড (BanglaType Keyboard)
-
-<img alt="Logo" src="graphics/icon.webp" width="120" />
-
-<p>
-  <img alt="License" src="https://img.shields.io/badge/License-GPLv3-blue.svg" />
-  <img alt="Version" src="https://img.shields.io/badge/version-1.9.1-green.svg" />
-  <img alt="Platform" src="https://img.shields.io/badge/Android-8.0%2B-brightgreen.svg" />
-  <img alt="Language" src="https://img.shields.io/badge/Kotlin-100%25-purple.svg" />
-</p>
-
-**বাংলাটাইপ** একটি সম্পূর্ণ **অফলাইন, ওপেন-সোর্স ও প্রাইভেসি-বান্ধব** বাংলা কীবোর্ড অ্যাপ। বন্ধুদের সাথে চ্যাট হোক কিংবা লেখালেখি, সংখ্যা বা সিম্বল টাইপ করা—সব কাজেই দ্রুত, সহজ ও আরামদায়ক টাইপিং অভিজ্ঞতা দিতে এটি তৈরি।
-
-➡️ ওয়েবসাইট: https://amadersomaj.com
-➡️ ফেসবুক: https://www.facebook.com/BanglaTypeKeyboard
+# BanglaType Keyboard — হোক লেখা প্রাণবন্ত ✨
 
 <div align="center">
-<img alt="App image" src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" width="30%">
-<img alt="App image" src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" width="30%">
-<img alt="App image" src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" width="30%">
+  <img alt="BanglaType Logo" src="app/src/main/res/drawable/logo_banglatype.png" width="140" />
+  <p><strong>Advanced • Secure • Material 3</strong></p>
 </div>
 
----
+<p align="center">
+  <img alt="License" src="https://img.shields.io/badge/License-GPLv3-0078F8.svg?style=for-the-badge" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-002040.svg?style=for-the-badge" />
+  <img alt="Platform" src="https://img.shields.io/badge/Android-8.0%2B-white.svg?style=for-the-badge&logo=android&logoColor=0078F8" />
+  <img alt="Language" src="https://img.shields.io/badge/Kotlin-100%25-7F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white" />
+</p>
 
-## 📑 সূচিপত্র
-
-- [প্রধান বৈশিষ্ট্য](#-প্রধান-বৈশিষ্ট্য)
-- [সমর্থিত লেআউট](#-সমর্থিত-লেআউট)
-- [প্রাইভেসি](#-প্রাইভেসি)
-- [ইনস্টলেশন](#-ইনস্টলেশন)
-- [সোর্স থেকে বিল্ড](#-সোর্স-থেকে-বিল্ড)
-- [প্রজেক্ট কাঠামো](#-প্রজেক্ট-কাঠামো)
-- [অবদান রাখুন](#-অবদান-রাখুন)
-- [লাইসেন্স](#-লাইসেন্স)
-- [কৃতজ্ঞতা](#-কৃতজ্ঞতা)
+**BanglaType Keyboard** is an advanced, free, and lightweight input method editor (IME) for Android. It is designed to provide a premium typing experience with **Smart Phonetic**, **Fixed Layouts**, and **Speech-to-Text** capabilities, all while keeping your data 100% offline and secure.
 
 ---
 
-## ✨ প্রধান বৈশিষ্ট্য
+## 🚀 Key Features
 
-### ⌨️ টাইপিং
-- **একাধিক বাংলা লেআউট** — অভ্র (ফোনেটিক), জাতীয় ও প্রভাত, সাথে ইংরেজি QWERTY
-- **ওয়ার্ড সাজেশন / প্রেডিকশন** — টাইপ করার সময় শব্দের পরামর্শ
-- **টেক্সট শর্টকাট** — ছোট ট্রিগার লিখে বড় লেখা বসানো
-- **বাংলা সংখ্যা** — বাংলা লেখার সময় স্বয়ংক্রিয়ভাবে বাংলা ডিজিট
-- **অটো ক্যাপিটালাইজেশন ও অটো পাংচুয়েশন**
-- **স্পেসবার ভাষা পরিবর্তন** — স্পেসবারে সোয়াইপ করে দ্রুত ভাষা বদল
+### ⌨️ Intelligent Typing
+- **Multiple Layouts** — Avro (Phonetic), Jatiyo, and Probhat, plus English QWERTY.
+- **Smart Prediction** — Context-aware word suggestions as you type.
+- **Text Shortcuts** — Create triggers (e.g., `omw`) that expand into full phrases (e.g., `On my way!`).
+- **Bangla Numerals** — Automatic conversion to Bangla digits during Bengali input.
 
-### 🖐️ এক হাতে টাইপিং (One-handed mode)
-- কীবোর্ডকে **বাঁ বা ডান পাশে** সরিয়ে এক হাতে আরামে টাইপিং
-- পাশে থাকা কন্ট্রোল দিয়ে **সাইড পরিবর্তন** বা **পূর্ণ প্রস্থে ফিরে যাওয়া**
+### 🎙️ Advanced Input
+- **In-App Voice Typing** — High-accuracy speech-to-text directly in the keyboard.
+- **Clipboard Manager** — Store, manage, and pin frequently used clips for quick access.
+- **Smart Calculator** — Perform calculations directly in the text field (e.g., `5+5` becomes `10`).
 
-### 🎯 জেসচার
-- **স্পেসবার কার্সর কন্ট্রোল** (ঐচ্ছিক) — স্পেসবারে সোয়াইপ করে কার্সর সরানো
-- **সোয়াইপ ডিলিট** — ব্যাকস্পেসে সোয়াইপ করে পুরো শব্দ মোছা
+### 🎨 Material 3 UI & Customization
+- **Modern UI Overhaul** — Clean, card-based interface with Material 3 principles.
+- **Premium Themes** — Choose from built-in presets (Midnight, Ocean, Sunset) or create your own with a custom photo.
+- **One-Handed Mode** — Align the keyboard for effortless typing on large screens.
+- **Flexible Layouts** — Adjustable height, key borders, number row, and custom fonts.
 
-### 🎨 চেহারা ও থিম
-- **কাস্টম কীবোর্ড থিম** (Gboard-স্টাইল) — নিজের ছবি বা গ্রেডিয়েন্ট ব্যাকগ্রাউন্ড
-- **কাস্টমাইজেবল রঙ** — টেক্সট, কী ও অ্যাকসেন্ট রঙ নিজের মতো
-- **ডার্ক থিম** ও ম্যাটেরিয়াল ডিজাইন
-- কীবোর্ডের **উচ্চতা**, **কী বর্ডার** ও **কাস্টম ফন্ট** সেট করার সুবিধা
-
-### 🛠️ আরও সুবিধা
-- **ইন-অ্যাপ ভয়েস টাইপিং** — কথা বলে লেখা
-- **ক্লিপবোর্ড ম্যানেজার** — ক্লিপ তৈরি ও প্রায়ই ব্যবহৃতগুলো পিন করা
-- **ইমোজি** প্যালেট ও সার্চ
-- ঐচ্ছিক **নাম্বার রো**
-- কীপ্রেসে **ভাইব্রেশন, সাউন্ড ও পপআপ** (সম্পূর্ণ নিয়ন্ত্রণযোগ্য)
+### 🔒 Privacy First
+- **100% Offline** — No internet permission required. Your keystrokes never leave your device.
+- **Safe Storage** — Uses device-protected storage to remain functional during Direct Boot.
+- **Open Source** — Transparency you can trust.
 
 ---
 
-## 🌐 সমর্থিত লেআউট
+## 🎨 Brand Identity
 
-| লেআউট | ধরন |
-|--------|------|
-| অভ্র (Avro) | বাংলা ফোনেটিক |
-| জাতীয় (Jatiyo) | বাংলা ফিক্সড |
-| প্রভাত (Probhat) | বাংলা ফিক্সড |
-| English (QWERTY) | ইংরেজি |
+BanglaType follows a professional and vibrant design language:
+- **Brand Blue (#0078F8):** Our primary color for a modern, energetic feel.
+- **Navy Text (#002040):** For sharp, professional readability.
+- **Off-White Background (#F8F8F8):** A clean canvas that makes content pop.
 
 ---
 
-## 🔒 প্রাইভেসি
+## 🏗️ Building from Source
 
-- **সম্পূর্ণ অফলাইন** — ইন্টারনেট পারমিশন নেই, তাই কোনো ডেটা বাইরে যায় না
-- কোনো ব্যবহারকারীর তথ্য সংগ্রহ বা শেয়ার করা হয় না
-- ওপেন-সোর্স হওয়ায় কোড নিজে যাচাই করার সুযোগ আছে
-
----
-
-## 📥 ইনস্টলেশন
-
-> অ্যাপটি বর্তমানে ডেভেলপমেন্ট পর্যায়ে রয়েছে। রিলিজ APK পেলে এখানে লিংক যুক্ত করা হবে।
-
-আপাতত নিচের নির্দেশনা অনুযায়ী সোর্স থেকে বিল্ড করে ইনস্টল করা যাবে।
-
----
-
-## 🏗️ সোর্স থেকে বিল্ড
-
-**প্রয়োজনীয়তা**
-
-- Android Studio (সর্বশেষ সংস্করণ) অথবা কমান্ড-লাইন Gradle
+**Requirements:**
+- Android Studio Ladybug (or newer)
 - JDK 17
-- Android SDK — সর্বনিম্ন API 26 (Android 8.0), টার্গেট API 36
+- Android SDK (Min API 26, Target API 35)
 
-**ধাপ**
-
+**Steps:**
 ```bash
-# রিপো ক্লোন করুন
-git clone https://github.com/<your-username>/BanglaType-Keyboard.git
-cd BanglaType-Keyboard
+# Clone the repository
+git clone https://github.com/mohammad-sheikh-shahinur-rahman/BanglaType-Android.git
+cd BanglaType-Android
 
-# ডিবাগ APK বিল্ড করুন (core ভ্যারিয়েন্ট)
-./gradlew assembleCoreDebug
-
-# অথবা সরাসরি ডিভাইসে ইনস্টল করুন
-./gradlew installCoreDebug
+# Build Debug APK
+./gradlew assembleDebug
 ```
 
-**প্রোডাক্ট ফ্লেভার**
+---
 
-অ্যাপে তিনটি ফ্লেভার আছে — প্রতিটির জন্য `assemble<Flavor>Debug` ব্যবহার করুন:
+## 🤝 Contributions
 
-| ফ্লেভার | উদ্দেশ্য |
-|---------|----------|
-| `core` | সাধারণ বিল্ড |
-| `foss` | F-Droid / FOSS বিতরণ |
-| `gplay` | Google Play বিতরণ |
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ---
 
-## 📂 প্রজেক্ট কাঠামো
+## 📄 License
 
-```
-app/        — মূল অ্যাপ্লিকেশন মডিউল (IME সার্ভিস, কীবোর্ড ভিউ, সেটিংস)
-commons/    — ভেন্ডর করা শেয়ার্ড commons লাইব্রেরি (লোকাল মডিউল)
-```
-
-গুরুত্বপূর্ণ কিছু অংশ:
-
-- `services/SimpleKeyboardIME.kt` — মূল ইনপুট মেথড সার্ভিস
-- `views/MyKeyboardView.kt` — কীবোর্ড আঁকা, টাচ ও জেসচার হ্যান্ডলিং
-- `helpers/Config.kt` — সব ইউজার সেটিংস (SharedPreferences)
-- `activities/SettingsActivity.kt` — সেটিংস স্ক্রিন
-
-**টেক স্ট্যাক:** Kotlin · Android IME framework · Room · ViewBinding · GPL v3
+Distributed under the **GNU General Public License v3.0**. See `LICENSE` for more information.
 
 ---
 
-## 🤝 অবদান রাখুন
+## 👨‍💻 Developer & Contact
 
-বাগ রিপোর্ট, ফিচার প্রস্তাব বা পুল রিকোয়েস্ট—সব ধরনের অবদানকে স্বাগত।
+**Mohammad Sheikh Shahinur Rahman**  
+*Software Engineer, Author, and Cyber Security Expert*
 
-1. রিপো **fork** করুন
-2. নতুন **branch** তৈরি করুন (`git checkout -b feature/my-feature`)
-3. পরিবর্তন **commit** করুন
-4. **Pull Request** পাঠান
-
-নতুন বাংলা স্ট্রিং যোগ করলে `app/src/main/res/values-bn/strings.xml` ও `values-bn-rBD/strings.xml`-এ অনুবাদ যুক্ত করতে ভুলবেন না।
-
----
-
-## 📄 লাইসেন্স
-
-এই প্রজেক্ট **GNU General Public License v3.0 (GPL-3.0)** অধীনে প্রকাশিত।
-বিস্তারিত [LICENSE](LICENSE) ফাইলে দেখুন।
-
----
-
-## 🙏 কৃতজ্ঞতা
-
-বাংলাটাইপ কীবোর্ড [Fossify Keyboard](https://github.com/FossifyOrg/Keyboard)-এর ভিত্তিতে তৈরি (de-Fossify করে commons লোকাল মডিউল হিসেবে অন্তর্ভুক্ত করা হয়েছে)। মূল ডেভেলপার ও অবদানকারীদের প্রতি কৃতজ্ঞতা।
-
----
+- **Website:** [amadersomaj.com](https://amadersomaj.com)
+- **LinkedIn:** [In/Mohammad-Sheikh-Shahinur-Rahman](https://www.linkedin.com/in/mohammad-sheikh-shahinur-rahman/)
+- **Facebook:** [BanglaTypeKeyboard](https://www.facebook.com/BanglaTypeKeyboard)
+- **Email:** info@amadersomaj.com
 
 <div align="center">
-<sub>❤️ দিয়ে তৈরি — আমাদের সমাজ</sub>
+  <sub>Built with ❤️ by IT Amadersomaj Inc.</sub>
 </div>
