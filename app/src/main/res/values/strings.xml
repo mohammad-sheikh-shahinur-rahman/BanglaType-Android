@@ -185,4 +185,17 @@
     <string name="advanced_features">Advanced Features</string>
     <string name="space_swipe_cursor_control">Spacebar cursor control</string>
     <string name="swipe_delete_word">Swipe to delete word</string>
+    <string name="common_phrases">Common Phrases</string>
+    <string name="juktakkhor_help">Juktakkhor Help</string>
+    <string name="search_phrases">Search phrases…</string>
+    <string name="search_juktakkhor">Search juktakkhor…</string>
+    <string name="translator">Translator</string>
+    <string name="translate">Translate</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
+    <string name="copy_result">Copy result</string>
+    <string name="calculator">Calculator</string>
+    <string name="enter_expression">Enter expression…</string>
+    <string name="use_system_colors">Use system colors (Material You)</string>
+    <string name="apps">Apps</string>
 </resources>

@@ -30,13 +30,16 @@ import com.itamadersomajinc.banglatype.commons.extensions.updateTextColors
 import com.itamadersomajinc.banglatype.commons.helpers.isNougatPlus
 import com.itamadersomajinc.banglatype.commons.models.RadioItem
 import com.itamadersomajinc.banglatype.commons.views.MyTextView
+import com.itamadersomajinc.banglatype.commons.views.MyEditText
 import com.itamadersomajinc.banglatype.R
 import com.itamadersomajinc.banglatype.databases.ClipsDatabase
+import com.itamadersomajinc.banglatype.databases.PhrasesDatabase
 import com.itamadersomajinc.banglatype.databases.PredictionDatabase
 import com.itamadersomajinc.banglatype.databases.ShortcutsDatabase
 import com.itamadersomajinc.banglatype.helpers.Config
 import com.itamadersomajinc.banglatype.helpers.INPUT_METHOD_SUBTYPE_VOICE
 import com.itamadersomajinc.banglatype.interfaces.ClipsDao
+import com.itamadersomajinc.banglatype.interfaces.PhrasesDao
 import com.itamadersomajinc.banglatype.interfaces.PredictionsDao
 import com.itamadersomajinc.banglatype.interfaces.ShortcutsDao
 
@@ -67,6 +70,9 @@ val Context.inputMethodManager: InputMethodManager
 val Context.clipsDB: ClipsDao
     get() = ClipsDatabase.getInstance(applicationContext.safeStorageContext).ClipsDao()
 
+val Context.phrasesDB: PhrasesDao
+    get() = PhrasesDatabase.getInstance(applicationContext.safeStorageContext).PhrasesDao()
+
 val Context.predictionsDB: PredictionsDao
     get() = PredictionDatabase.getInstance(applicationContext.safeStorageContext).PredictionsDao()
 
@@ -96,106 +102,49 @@ fun Context.setupKeyboardDialogStuff(
     val textColor = getProperTextColor()
     val backgroundColor = getProperBackgroundColor()
     val primaryColor = getProperPrimaryColor()
+    
     if (view is ViewGroup) {
         updateTextColors(view)
     } else if (view is MyTextView) {
         view.setColors(textColor, primaryColor, backgroundColor)
+    } else if (view is MyEditText) {
+        view.setColors(textColor, primaryColor, backgroundColor)
     }
 
-    if (dialog is MaterialAlertDialogBuilder) {
-        dialog.create().apply {
-            if (titleId != 0) {
-                setTitle(titleId)
-            } else if (titleText.isNotEmpty()) {
-                setTitle(titleText)
-            }
-
-            val lp = window?.attributes
-            lp?.token = windowToken
-            lp?.type = WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG
-            window?.attributes = lp
-            window?.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-
-            setView(view)
-            setCancelable(cancelOnTouchOutside)
-            show()
-
-            val bgDrawable = when {
-                isBlackAndWhiteTheme() -> ResourcesCompat.getDrawable(
-                    resources, R.drawable.black_dialog_background, theme
-                )
-
-                isDynamicTheme() -> ResourcesCompat.getDrawable(
-                    resources, R.drawable.dialog_you_background, theme
-                )
-
-                else -> resources.getColoredDrawableWithColor(
-                    drawableId = R.drawable.dialog_bg,
-                    color = baseConfig.backgroundColor
-                )
-            }
-
-            window?.setBackgroundDrawable(bgDrawable)
-            callback?.invoke(this)
-        }
-    } else {
-        var title: TextView? = null
-        if (titleId != 0 || titleText.isNotEmpty()) {
-            title =
-                DialogTitleBinding
-                    .inflate(LayoutInflater.from(this))
-                    .dialogTitleTextview.apply {
-                        if (titleText.isNotEmpty()) {
-                            text = titleText
-                        } else {
-                            setText(titleId)
-                        }
-                        setTextColor(textColor)
-                    }
+    dialog.create().apply {
+        if (titleId != 0) {
+            setTitle(titleId)
+        } else if (titleText.isNotEmpty()) {
+            setTitle(titleText)
         }
 
-        // if we use the same primary and background color, use the text color for dialog confirmation buttons
-        val dialogButtonColor = if (primaryColor == baseConfig.backgroundColor) {
-            textColor
-        } else {
-            primaryColor
+        val lp = window?.attributes
+        lp?.token = windowToken
+        lp?.type = WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG
+        window?.attributes = lp
+        window?.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+
+        setView(view)
+        setCancelable(cancelOnTouchOutside)
+        show()
+
+        val bgDrawable = when {
+            isBlackAndWhiteTheme() -> ResourcesCompat.getDrawable(
+                resources, R.drawable.black_dialog_background, theme
+            )
+
+            isDynamicTheme() -> ResourcesCompat.getDrawable(
+                resources, R.drawable.dialog_you_background, theme
+            )
+
+            else -> resources.getColoredDrawableWithColor(
+                drawableId = R.drawable.dialog_bg,
+                color = baseConfig.backgroundColor
+            )
         }
 
-        dialog.create().apply {
-            setView(view)
-            requestWindowFeature(Window.FEATURE_NO_TITLE)
-            setCustomTitle(title)
-
-            val lp = window?.attributes
-            lp?.token = windowToken
-            lp?.type = WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG
-            window?.attributes = lp
-            window?.addFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-
-            setCanceledOnTouchOutside(cancelOnTouchOutside)
-            show()
-            getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(dialogButtonColor)
-            getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(dialogButtonColor)
-            getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(dialogButtonColor)
-
-            val bgDrawable = when {
-                isBlackAndWhiteTheme() -> ResourcesCompat.getDrawable(
-                    resources, R.drawable.black_dialog_background, theme
-                )
-
-                isDynamicTheme() -> ResourcesCompat.getDrawable(
-                    resources, R.drawable.dialog_you_background, theme
-                )
-
-                else -> resources.getColoredDrawableWithColor(
-                    drawableId = R.drawable.dialog_bg,
-                    color = baseConfig.backgroundColor
-                )
-            }
-
-            window?.setBackgroundDrawable(bgDrawable)
-            callback?.invoke(this)
-        }
+        window?.setBackgroundDrawable(bgDrawable)
+        callback?.invoke(this)
     }
 }
 

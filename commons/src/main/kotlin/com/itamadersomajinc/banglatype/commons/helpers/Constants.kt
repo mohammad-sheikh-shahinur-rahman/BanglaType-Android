@@ -12,6 +12,7 @@ import com.itamadersomajinc.banglatype.commons.R
 import com.itamadersomajinc.banglatype.commons.extensions.normalizeString
 import com.itamadersomajinc.banglatype.commons.models.contacts.LocalContact
 import com.itamadersomajinc.banglatype.commons.overloads.times
+import java.util.concurrent.Executors
 
 const val EXTERNAL_STORAGE_PROVIDER_AUTHORITY = "com.android.externalstorage.documents"
 const val EXTRA_SHOW_ADVANCED = "android.content.extra.SHOW_ADVANCED"
@@ -363,6 +364,7 @@ const val FONT_SIZE_EXTRA_LARGE = 3
 const val FONT_TYPE_SYSTEM_DEFAULT = 0
 const val FONT_TYPE_MONOSPACE = 1
 const val FONT_TYPE_CUSTOM = 2
+const val FONT_TYPE_ASSET = 3
 
 const val MONDAY_BIT = 1
 const val TUESDAY_BIT = 2
@@ -521,11 +523,11 @@ const val VIEW_TYPE_UNEVEN_GRID = 3
 
 fun isOnMainThread() = Looper.myLooper() == Looper.getMainLooper()
 
+private val backgroundExecutor = Executors.newCachedThreadPool()
+
 fun ensureBackgroundThread(callback: () -> Unit) {
     if (isOnMainThread()) {
-        Thread {
-            callback()
-        }.start()
+        backgroundExecutor.execute(callback)
     } else {
         callback()
     }

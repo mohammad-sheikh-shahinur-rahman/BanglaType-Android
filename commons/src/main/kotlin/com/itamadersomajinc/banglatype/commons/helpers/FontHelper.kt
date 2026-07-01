@@ -32,9 +32,19 @@ object FontHelper {
         cachedTypeface = when (actualFontType) {
             FONT_TYPE_MONOSPACE -> Typeface.MONOSPACE
             FONT_TYPE_CUSTOM -> loadCustomFont(context, actualFontFileName)
+            FONT_TYPE_ASSET -> loadAssetFont(context, actualFontFileName)
             else -> Typeface.DEFAULT
         }
         return cachedTypeface!!
+    }
+
+    private fun loadAssetFont(context: Context, fileName: String): Typeface {
+        if (fileName.isEmpty()) return Typeface.DEFAULT
+        return try {
+            Typeface.createFromAsset(context.assets, fileName)
+        } catch (_: Exception) {
+            Typeface.DEFAULT
+        }
     }
 
     private fun loadCustomFont(context: Context, fileName: String): Typeface {
@@ -93,5 +103,25 @@ object FontHelper {
         } catch (_: Exception) {
             false
         }
+    }
+
+    fun getAssetFonts(context: Context, path: String = "font"): List<String> {
+        val fonts = mutableListOf<String>()
+        val files = context.assets.list(path) ?: return fonts
+        for (file in files) {
+            val fullPath = if (path.isEmpty()) file else "$path/$file"
+            if (file.endsWith(".ttf", true) || file.endsWith(".otf", true)) {
+                fonts.add(fullPath)
+            } else {
+                // try as directory - assets.list() returns filenames, not full paths.
+                // If it's a directory, list() should return its contents.
+                // We can check if list() on fullPath returns anything.
+                val subFiles = context.assets.list(fullPath)
+                if (subFiles?.isNotEmpty() == true) {
+                    fonts.addAll(getAssetFonts(context, fullPath))
+                }
+            }
+        }
+        return fonts
     }
 }

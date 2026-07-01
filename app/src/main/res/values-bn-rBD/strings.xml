@@ -21,4 +21,16 @@
     <string name="about_developer_name">আইটি আমাদেরসমাজ .ইনকর্পোরেটেড</string>
     <string name="follow_us_facebook">ফেসবুকে আমাদের অনুসরণ করুন</string>
     <string name="translation_probhat">প্রভাত</string>
+    <string name="common_phrases">প্রয়োজনীয় বাক্য</string>
+    <string name="juktakkhor_help">যুক্তাক্ষর হেল্প</string>
+    <string name="search_phrases">সার্চ করুন…</string>
+    <string name="search_juktakkhor">সার্চ করুন…</string>
+    <string name="translator">অনুবাদক</string>
+    <string name="translate">অনুবাদ</string>
+    <string name="from">থেকে</string>
+    <string name="to">পর্যন্ত</string>
+    <string name="copy_result">কপি করুন</string>
+    <string name="calculator">ক্যালকুলেটর</string>
+    <string name="enter_expression">হিসাব করুন…</string>
+    <string name="use_system_colors">সিস্টেম কালার ব্যবহার করুন (Material You)</string>
 </resources>

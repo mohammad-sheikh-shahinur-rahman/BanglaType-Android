@@ -57,8 +57,11 @@ import com.itamadersomajinc.banglatype.commons.helpers.ACCENT_COLOR
 import com.itamadersomajinc.banglatype.commons.helpers.BACKGROUND_COLOR
 import com.itamadersomajinc.banglatype.commons.helpers.CUSTOM_ACCENT_COLOR
 import com.itamadersomajinc.banglatype.commons.helpers.CUSTOM_BACKGROUND_COLOR
+import com.itamadersomajinc.banglatype.commons.helpers.CUSTOM_FONT_FILE_NAME
+import com.itamadersomajinc.banglatype.commons.helpers.CUSTOM_FONT_TYPE
 import com.itamadersomajinc.banglatype.commons.helpers.CUSTOM_PRIMARY_COLOR
 import com.itamadersomajinc.banglatype.commons.helpers.CUSTOM_TEXT_COLOR
+import com.itamadersomajinc.banglatype.commons.helpers.FontHelper
 import com.itamadersomajinc.banglatype.commons.helpers.IS_GLOBAL_THEME_ENABLED
 import com.itamadersomajinc.banglatype.commons.helpers.IS_SYSTEM_THEME_ENABLED
 import com.itamadersomajinc.banglatype.commons.helpers.PRIMARY_COLOR
@@ -139,6 +142,7 @@ import com.itamadersomajinc.banglatype.helpers.LANGUAGE_SWEDISH
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_TURKISH
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_TURKISH_Q
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_UKRAINIAN
+import com.itamadersomajinc.banglatype.helpers.MathHelper
 import com.itamadersomajinc.banglatype.helpers.MyKeyboard
 import com.itamadersomajinc.banglatype.helpers.VoiceInputManager
 import com.itamadersomajinc.banglatype.helpers.SHOW_KEY_BORDERS
@@ -322,6 +326,11 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
     override fun onKey(code: Int) {
         val inputConnection = currentInputConnection
         if (keyboard == null || inputConnection == null) {
+            return
+        }
+
+        if (isInternalPanelOpen() && isNonLayoutKey(code)) {
+            handleInternalKey(code)
             return
         }
 
@@ -542,7 +551,7 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         val prefix = currentMathExpressionPrefix(before)
         if (prefix.length > 1 && prefix.any { it.isDigit() || it in '০'..'৯' } &&
             (prefix.contains("+") || prefix.contains("-") || prefix.contains("*") || prefix.contains("/"))) {
-            val result = tryEvaluateMath(prefix)
+            val result = MathHelper.tryEvaluateMath(prefix)
             if (result != prefix) {
                 inputConnection.beginBatchEdit()
                 inputConnection.deleteSurroundingText(prefix.length, 0)
@@ -557,12 +566,6 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         while (start > 0 && (Character.isLetterOrDigit(s[start - 1]) || "+-*/().".contains(s[start - 1]))) start--
         return s.substring(start)
     }
-
-    /**
-     * Double-space → sentence end: if the cursor is preceded by "[letter/digit][space]" and the user
-     * presses space again, swap that previous space for a full stop and a space ("। " for Bangla,
-     * ". " otherwise). Returns true when it acted, so the caller skips committing the normal space.
-     */
     private fun maybeAutoPunctuate(inputConnection: InputConnection): Boolean {
         if (!config.autoPunctuation) {
             return false
@@ -706,89 +709,9 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
     override fun onText(text: String) {
         var textToCommit = text
         if (textToCommit.length > 1 && (textToCommit.contains("+") || textToCommit.contains("-") || textToCommit.contains("*") || textToCommit.contains("/"))) {
-            textToCommit = tryEvaluateMath(textToCommit)
+            textToCommit = MathHelper.tryEvaluateMath(textToCommit)
         }
         currentInputConnection?.commitText(textToCommit, 1)
-    }
-
-    private fun tryEvaluateMath(text: String): String {
-        return try {
-            val isBengali = text.any { it in '০'..'৯' }
-            val expression = text.toAsciiString().trim()
-            if (!expression.any { it.isDigit() }) return text
-            
-            // Simple regex based evaluator for basic expressions
-            val result = object : Any() {
-                fun eval(str: String): Double {
-                    return object : Any() {
-                        var pos = -1
-                        var ch = 0
-                        fun nextChar() {
-                            ch = if (++pos < str.length) str[pos].toInt() else -1
-                        }
-
-                        fun eat(charToEat: Int): Boolean {
-                            while (ch == ' '.toInt()) nextChar()
-                            if (ch == charToEat) {
-                                nextChar()
-                                return true
-                            }
-                            return false
-                        }
-
-                        fun parse(): Double {
-                            nextChar()
-                            val x = parseExpression()
-                            if (pos < str.length) return Double.NaN
-                            return x
-                        }
-
-                        fun parseExpression(): Double {
-                            var x = parseTerm()
-                            while (true) {
-                                if (eat('+'.toInt())) x += parseTerm()
-                                else if (eat('-'.toInt())) x -= parseTerm()
-                                else return x
-                            }
-                        }
-
-                        fun parseTerm(): Double {
-                            var x = parseFactor()
-                            while (true) {
-                                if (eat('*'.toInt())) x *= parseFactor()
-                                else if (eat('/'.toInt())) x /= parseFactor()
-                                else return x
-                            }
-                        }
-
-                        fun parseFactor(): Double {
-                            if (eat('+'.toInt())) return parseFactor()
-                            if (eat('-'.toInt())) return -parseFactor()
-                            var x: Double
-                            val startPos = pos
-                            if (eat('('.toInt())) {
-                                x = parseExpression()
-                                eat(')'.toInt())
-                            } else if (ch >= '0'.toInt() && ch <= '9'.toInt() || ch == '.'.toInt()) {
-                                while (ch >= '0'.toInt() && ch <= '9'.toInt() || ch == '.'.toInt()) nextChar()
-                                x = str.substring(startPos, pos).toDouble()
-                            } else {
-                                return Double.NaN
-                            }
-                            return x
-                        }
-                    }.parse()
-                }
-            }.eval(expression)
-
-            if (result.isNaN()) text else {
-                val longRes = result.toLong()
-                val resString = if (result == longRes.toDouble()) longRes.toString() else result.toString()
-                if (isBengali) resString.toBengaliString() else resString
-            }
-        } catch (e: Exception) {
-            text
-        }
     }
 
     override fun reloadKeyboard() {
@@ -1178,12 +1101,14 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
                 SHOW_KEY_BORDERS, KEYBOARD_LANGUAGE, HEIGHT_PERCENTAGE, SHOW_NUMBERS_ROW, VOICE_INPUT_METHOD,
                 TEXT_COLOR, BACKGROUND_COLOR, PRIMARY_COLOR, ACCENT_COLOR, CUSTOM_TEXT_COLOR, CUSTOM_BACKGROUND_COLOR,
                 CUSTOM_PRIMARY_COLOR, CUSTOM_ACCENT_COLOR, IS_GLOBAL_THEME_ENABLED, IS_SYSTEM_THEME_ENABLED,
-                KEYBOARD_THEME_ID, KEYBOARD_BG_IMAGE_PATH, KEYBOARD_BG_DIM
+                KEYBOARD_THEME_ID, KEYBOARD_BG_IMAGE_PATH, KEYBOARD_BG_DIM, CUSTOM_FONT_TYPE, CUSTOM_FONT_FILE_NAME
             )
         ) {
             if (::binding.isInitialized) {
                 keyboardView?.setupKeyboard()
                 updateBackgroundColors()
+                // Clear font cache so new font is applied
+                FontHelper.clearCache()
             }
         }
     }
@@ -1310,5 +1235,103 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             }
         }
         return keyboard
+    }
+
+    private fun isInternalPanelOpen(): Boolean {
+        if (!::binding.isInitialized) return false
+        return binding.calculatorHolder.visibility == View.VISIBLE ||
+                binding.emojiPaletteHolder.visibility == View.VISIBLE ||
+                binding.clipboardManagerHolder.visibility == View.VISIBLE ||
+                binding.phrasesHolder.visibility == View.VISIBLE ||
+                binding.helpHolder.visibility == View.VISIBLE
+    }
+
+    private fun isNonLayoutKey(code: Int): Boolean {
+        return code != MyKeyboard.KEYCODE_SHIFT &&
+                code != MyKeyboard.KEYCODE_MODE_CHANGE &&
+                code != MyKeyboard.KEYCODE_SYMBOLS_MODE_CHANGE
+    }
+
+    private fun handleInternalKey(code: Int) {
+        val editText = when {
+            binding.calculatorHolder.visibility == View.VISIBLE -> binding.calculatorInput
+            binding.emojiPaletteHolder.visibility == View.VISIBLE -> binding.emojiSearch
+            binding.clipboardManagerHolder.visibility == View.VISIBLE -> binding.clipboardSearch
+            binding.phrasesHolder.visibility == View.VISIBLE -> {
+                if (binding.phrasesAddView.visibility == View.VISIBLE) binding.phrasesAddInput else binding.phrasesSearch
+            }
+
+            binding.helpHolder.visibility == View.VISIBLE -> {
+                if (binding.helpAddView.visibility == View.VISIBLE) {
+                    if (binding.helpAddBreakdown.hasFocus()) binding.helpAddBreakdown else binding.helpAddConjunct
+                } else {
+                    binding.helpSearch
+                }
+            }
+
+            else -> return
+        }
+
+        if (!editText.isFocused) {
+            editText.requestFocus()
+        }
+
+        when (code) {
+            MyKeyboard.KEYCODE_DELETE -> {
+                val selectionStart = Math.max(editText.selectionStart, 0)
+                val selectionEnd = Math.max(editText.selectionEnd, 0)
+                if (selectionStart != selectionEnd) {
+                    editText.text?.delete(selectionStart, selectionEnd)
+                } else if (selectionStart > 0) {
+                    editText.text?.delete(selectionStart - 1, selectionStart)
+                }
+            }
+
+            MyKeyboard.KEYCODE_ENTER -> {
+                if (editText.id == R.id.calculator_input) {
+                    val result = binding.calculatorResult.text.toString().removePrefix("= ").trim()
+                    if (result.isNotEmpty()) {
+                        onText(result)
+                        keyboardView?.closeCalculatorPanel()
+                    }
+                } else if (binding.phrasesAddView.visibility == View.VISIBLE || binding.helpAddView.visibility == View.VISIBLE) {
+                    // Logic for saving via enter if desired
+                } else {
+                    editText.clearFocus()
+                }
+            }
+
+            MyKeyboard.KEYCODE_SPACE -> {
+                val selectionStart = Math.max(editText.selectionStart, 0)
+                val selectionEnd = Math.max(editText.selectionEnd, 0)
+                editText.text?.replace(selectionStart, selectionEnd, " ")
+            }
+
+            else -> {
+                if (code > 0) {
+                    var codeChar = code.toChar()
+                    if (Character.isLetter(codeChar) && keyboard!!.mShiftState > ShiftState.OFF) {
+                        codeChar = if (baseContext.config.keyboardLanguage == LANGUAGE_TURKISH_Q) {
+                            codeChar.toString().uppercase(Locale.forLanguageTag("tr")).single()
+                        } else {
+                            Character.toUpperCase(codeChar)
+                        }
+                    }
+
+                    // For search fields, we often want the language-processed text (e.g. Bengali)
+                    // but for Emojis, English is better. 
+                    val textToInsert = if (isAvro && (editText.id == R.id.phrases_search || editText.id == R.id.help_search || editText.id == R.id.phrases_add_input)) {
+                        // Very basic Avro support for internal fields (simplified)
+                        codeChar.toString() 
+                    } else {
+                        codeChar.toString()
+                    }
+
+                    val selectionStart = Math.max(editText.selectionStart, 0)
+                    val selectionEnd = Math.max(editText.selectionEnd, 0)
+                    editText.text?.replace(selectionStart, selectionEnd, textToInsert)
+                }
+            }
+        }
     }
 }

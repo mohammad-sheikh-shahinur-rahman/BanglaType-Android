@@ -189,4 +189,12 @@ class Config(context: Context) : BaseConfig(context) {
         recentEmojis.add(0, emoji)
         recentlyUsedEmojis = recentEmojis.take(RECENT_EMOJIS_LIMIT)
     }
+
+    var toolbarOrder: String
+        get() = prefs.getString("toolbar_order", "")!!
+        set(value) = prefs.edit().putString("toolbar_order", value).apply()
+
+    var toolbarHeight: Int
+        get() = prefs.getInt("toolbar_height_custom", -1)
+        set(value) = prefs.edit().putInt("toolbar_height_custom", value).apply()
 }

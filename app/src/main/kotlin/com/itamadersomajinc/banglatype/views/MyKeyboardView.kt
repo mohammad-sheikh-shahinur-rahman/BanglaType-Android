@@ -28,6 +28,7 @@ import android.util.AttributeSet
 import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.DragEvent
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -36,6 +37,7 @@ import android.view.ViewGroup
 import android.view.ViewConfiguration
 import android.view.animation.AccelerateInterpolator
 import android.view.inputmethod.EditorInfo
+import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.PopupWindow
@@ -56,6 +58,7 @@ import com.itamadersomajinc.banglatype.commons.extensions.onTextChangeListener
 import com.itamadersomajinc.banglatype.commons.extensions.applyColorFilter
 import com.itamadersomajinc.banglatype.commons.extensions.beGone
 import com.itamadersomajinc.banglatype.commons.extensions.beGoneIf
+import com.itamadersomajinc.banglatype.commons.extensions.beInvisible
 import com.itamadersomajinc.banglatype.commons.extensions.beInvisibleIf
 import com.itamadersomajinc.banglatype.commons.extensions.beVisible
 import com.itamadersomajinc.banglatype.commons.extensions.beVisibleIf
@@ -110,6 +113,9 @@ import com.itamadersomajinc.banglatype.helpers.parseEmojiKeywords
 import com.itamadersomajinc.banglatype.helpers.searchEmojis
 import com.itamadersomajinc.banglatype.helpers.KeyboardFeedbackManager
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_TURKISH_Q
+import com.itamadersomajinc.banglatype.helpers.MathHelper
+import com.itamadersomajinc.banglatype.helpers.PhrasesHelper
+import com.itamadersomajinc.banglatype.helpers.SimpleTextAdapter
 import com.itamadersomajinc.banglatype.helpers.AvroParser
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_BANGLA_AVRO
 import com.itamadersomajinc.banglatype.helpers.LANGUAGE_VIETNAMESE_TELEX
@@ -139,6 +145,12 @@ import com.itamadersomajinc.banglatype.interfaces.RefreshClipsListener
 import com.itamadersomajinc.banglatype.models.Clip
 import com.itamadersomajinc.banglatype.models.ClipsSectionLabel
 import com.itamadersomajinc.banglatype.models.ListItem
+import com.itamadersomajinc.banglatype.models.Phrase
+import com.itamadersomajinc.banglatype.models.Juktakkhor
+import com.itamadersomajinc.banglatype.extensions.phrasesDB
+import com.itamadersomajinc.banglatype.extensions.setupKeyboardDialogStuff
+import com.itamadersomajinc.banglatype.extensions.getKeyboardDialogBuilder
+import com.itamadersomajinc.banglatype.commons.views.MyEditText
 import java.util.Arrays
 import java.util.Locale
 
@@ -160,6 +172,8 @@ class MyKeyboardView @JvmOverloads constructor(
     private var keyboardPopupBinding: KeyboardPopupKeyboardBinding? = null
     private var keyboardViewBinding: KeyboardViewKeyboardBinding? = null
     private var clipSearchQuery = ""
+    private var phraseSearchQuery = ""
+    private var helpSearchQuery = ""
     private var emojiSearchQuery = ""
     private var loadedEmojis: List<EmojiData> = emptyList()
     private var emojiAdapterItems: List<EmojisAdapter.Item> = emptyList()
@@ -251,8 +265,13 @@ class MyKeyboardView @JvmOverloads constructor(
     private var mVoiceMicAnimator: AnimatorSet? = null
 
     private var mToolbarHolder: View? = null
+    private var mToolbarButtonsContainer: LinearLayout? = null
+    private var mToolbarButtonsScrollView: HorizontalScrollView? = null
     private var mClipboardManagerHolder: View? = null
     private var mEmojiPaletteHolder: View? = null
+    private var mPhrasesHolder: View? = null
+    private var mHelpHolder: View? = null
+    private var mCalculatorHolder: View? = null
     private var emojiCompatMetadataVersion = 0
 
     // For multi-tap
@@ -412,8 +431,33 @@ class MyKeyboardView @JvmOverloads constructor(
     fun setKeyboardHolder(binding: KeyboardViewKeyboardBinding) {
         keyboardViewBinding = binding.apply {
             mToolbarHolder = toolbarHolder
+            mToolbarButtonsContainer = toolbarButtonsContainer
+            mToolbarButtonsScrollView = toolbarButtonsScrollView
             mClipboardManagerHolder = clipboardManagerHolder
             mEmojiPaletteHolder = emojiPaletteHolder
+            mPhrasesHolder = phrasesHolder
+            mHelpHolder = helpHolder
+            mCalculatorHolder = calculatorHolder
+
+            appsButton.setOnClickListener {
+                vibrateIfNeeded()
+                mFeaturesManuallyShown = !mFeaturesManuallyShown
+                if (mFeaturesManuallyShown) {
+                    suggestionsHolder.beGone()
+                    toolbarButtonsScrollView.beVisible()
+                } else {
+                    toolbarButtonsScrollView.beGone()
+                    if (predictionsStrip.childCount > 0) {
+                        suggestionsHolder.beVisible()
+                    }
+                }
+            }
+
+            appsButton.setOnLongClickListener {
+                vibrateIfNeeded()
+                cycleToolbarSize()
+                true
+            }
 
             voiceInputButton.setOnLongClickListener { context.toast(R.string.switch_to_voice_typing); true }
             voiceInputButton.setOnClickListener {
@@ -444,6 +488,39 @@ class MyKeyboardView @JvmOverloads constructor(
                 }
             }
 
+            speechBarSpace.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onKey(KEYCODE_SPACE)
+            }
+
+            speechBarBackspace.apply {
+                setOnTouchListener { _, event ->
+                    when (event.action) {
+                        MotionEvent.ACTION_DOWN -> {
+                            isPressed = true
+                            val deleteKeyIndex = mKeys.indexOfFirst { it.code == KEYCODE_DELETE }
+                            mRepeatKeyIndex = deleteKeyIndex
+                            mCurrentKey = if (deleteKeyIndex != NOT_A_KEY) deleteKeyIndex else KEYCODE_DELETE
+                            vibrateIfNeeded()
+                            mOnKeyboardActionListener!!.onKey(KEYCODE_DELETE)
+                            // setup repeating backspace
+                            val msg = mHandler!!.obtainMessage(MSG_REPEAT)
+                            mHandler!!.sendMessageDelayed(msg, REPEAT_START_DELAY.toLong())
+                            true
+                        }
+
+                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                            mHandler!!.removeMessages(MSG_REPEAT)
+                            mRepeatKeyIndex = NOT_A_KEY
+                            isPressed = false
+                            false
+                        }
+
+                        else -> false
+                    }
+                }
+            }
+
             settingsCog.setOnLongClickListener { context.toast(R.string.settings); true; }
             settingsCog.setOnClickListener {
                 vibrateIfNeeded()
@@ -451,6 +528,81 @@ class MyKeyboardView @JvmOverloads constructor(
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     context.startActivity(this)
                 }
+            }
+
+            phrasesButton.setOnClickListener {
+                vibrateIfNeeded()
+                openPhrasesPanel()
+            }
+
+            phrasesAdd.setOnClickListener {
+                vibrateIfNeeded()
+                phrasesList.beGone()
+                phrasesAddView.beVisible()
+                phrasesAddInput.setText("")
+                phrasesAddInput.requestFocus()
+            }
+
+            phrasesAddSave.setOnClickListener {
+                vibrateIfNeeded()
+                val text = phrasesAddInput.text.toString().trim()
+                if (text.isNotEmpty()) {
+                    ensureBackgroundThread {
+                        context.phrasesDB.insertPhrase(Phrase(null, text))
+                        Handler(Looper.getMainLooper()).post {
+                            phrasesAddView.beGone()
+                            phrasesList.beVisible()
+                            setupPhrases()
+                        }
+                    }
+                }
+            }
+
+            phrasesAddCancel.setOnClickListener {
+                vibrateIfNeeded()
+                phrasesAddView.beGone()
+                phrasesList.beVisible()
+            }
+
+            helpButton.setOnClickListener {
+                vibrateIfNeeded()
+                openHelpPanel()
+            }
+
+            helpAdd.setOnClickListener {
+                vibrateIfNeeded()
+                helpList.beGone()
+                helpAddView.beVisible()
+                helpAddConjunct.setText("")
+                helpAddBreakdown.setText("")
+                helpAddConjunct.requestFocus()
+            }
+
+            helpAddSave.setOnClickListener {
+                vibrateIfNeeded()
+                val conjunct = helpAddConjunct.text.toString().trim()
+                val breakdown = helpAddBreakdown.text.toString().trim()
+                if (conjunct.isNotEmpty() && breakdown.isNotEmpty()) {
+                    ensureBackgroundThread {
+                        context.phrasesDB.insertJuktakkhor(Juktakkhor(null, conjunct, breakdown))
+                        Handler(Looper.getMainLooper()).post {
+                            helpAddView.beGone()
+                            helpList.beVisible()
+                            setupHelp()
+                        }
+                    }
+                }
+            }
+
+            helpAddCancel.setOnClickListener {
+                vibrateIfNeeded()
+                helpAddView.beGone()
+                helpList.beVisible()
+            }
+
+            calculatorButton.setOnClickListener {
+                vibrateIfNeeded()
+                openCalculatorPanel()
             }
 
             // One-handed side controls: flip the keyboard to the opposite side, or expand back to full width.
@@ -484,6 +636,13 @@ class MyKeyboardView @JvmOverloads constructor(
                 vibrateIfNeeded()
                 openTextEditingPanel()
             }
+
+            loadToolbarOrder()
+            val savedHeight = context.config.toolbarHeight
+            if (savedHeight != -1) {
+                updateToolbarSize(savedHeight, save = false)
+            }
+            setupToolbarReordering()
 
             suggestionsHolder.addOnLayoutChangeListener(object : OnLayoutChangeListener {
                 override fun onLayoutChange(
@@ -531,6 +690,68 @@ class MyKeyboardView @JvmOverloads constructor(
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     context.startActivity(this)
                 }
+            }
+
+            phrasesClose.setOnClickListener {
+                vibrateIfNeeded()
+                closePhrasesPanel()
+            }
+
+            listOf(emojiSearch, phrasesSearch, helpSearch, phrasesAddInput, helpAddConjunct, helpAddBreakdown).forEach {
+                it.setOnClickListener { view -> view.requestFocus() }
+            }
+
+            phrasesSearch.onTextChangeListener { newText ->
+                phraseSearchQuery = newText
+                setupPhrases()
+            }
+
+            helpClose.setOnClickListener {
+                vibrateIfNeeded()
+                closeHelpPanel()
+            }
+
+            helpSearch.onTextChangeListener { newText ->
+                helpSearchQuery = newText
+                setupHelp()
+            }
+
+            calculatorClose.setOnClickListener {
+                vibrateIfNeeded()
+                closeCalculatorPanel()
+            }
+
+            calculatorInput.onTextChangeListener { newText ->
+                updateCalculatorResult(newText)
+            }
+
+            calculatorInsert.setOnClickListener {
+                vibrateIfNeeded()
+                val result = calculatorResult.text.toString().removePrefix("= ").trim()
+                if (result.isNotEmpty()) {
+                    mOnKeyboardActionListener?.onText(result)
+                    closeCalculatorPanel()
+                }
+            }
+
+            val calcButtons = listOf(
+                calc0, calc1, calc2, calc3, calc4, calc5, calc6, calc7, calc8, calc9,
+                calcDot, calcPlus, calcMinus, calcMultiply, calcDivide,
+                calcBracketOpen, calcBracketClose
+            )
+
+            calcButtons.forEach { btn ->
+                btn.setOnClickListener {
+                    vibrateIfNeeded()
+                    val currentText = calculatorInput.text.toString()
+                    calculatorInput.setText(currentText + (it as TextView).text)
+                    calculatorInput.setSelection(calculatorInput.text?.length ?: 0)
+                }
+            }
+
+            calcClear.setOnClickListener {
+                vibrateIfNeeded()
+                calculatorInput.setText("")
             }
 
             emojiPaletteClose.setOnClickListener {
@@ -593,6 +814,16 @@ class MyKeyboardView @JvmOverloads constructor(
                 mOnKeyboardActionListener?.onEditCursorMove(KeyEvent.KEYCODE_DPAD_LEFT, isSelecting)
             }
 
+            editMoveHome.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onEditCursorMove(KeyEvent.KEYCODE_MOVE_HOME, isSelecting)
+            }
+
+            editMoveEnd.setOnClickListener {
+                vibrateIfNeeded()
+                mOnKeyboardActionListener?.onEditCursorMove(KeyEvent.KEYCODE_MOVE_END, isSelecting)
+            }
+
             editDpadRight.setOnClickListener {
                 vibrateIfNeeded()
                 mOnKeyboardActionListener?.onEditCursorMove(KeyEvent.KEYCODE_DPAD_RIGHT, isSelecting)
@@ -644,13 +875,18 @@ class MyKeyboardView @JvmOverloads constructor(
         requestLayout()
     }
 
+    private var mFeaturesManuallyShown = false
+
     /** Populates the word-prediction strip in the toolbar. Empty list hides it. */
     fun setPredictions(words: List<String>) {
         val binding = keyboardViewBinding ?: return
         val strip = binding.predictionsStrip
         strip.removeAllViews()
         if (words.isEmpty() || context.isDeviceLocked) {
+            mFeaturesManuallyShown = false
             strip.beGone()
+            binding.suggestionsHolder.beGone()
+            binding.toolbarButtonsScrollView.beVisible()
             updateSuggestionsToolbarLayout()
             return
         }
@@ -660,7 +896,16 @@ class MyKeyboardView @JvmOverloads constructor(
             }
             strip.addView(buildPredictionChip(word))
         }
-        strip.beVisible()
+
+        if (mFeaturesManuallyShown) {
+            binding.suggestionsHolder.beGone()
+            binding.toolbarButtonsScrollView.beVisible()
+        } else {
+            strip.beVisible()
+            binding.suggestionsHolder.beVisible()
+            binding.toolbarButtonsScrollView.beGone()
+        }
+
         // predictions take precedence over the inline clipboard preview
         binding.clipboardValue.beGone()
         updateSuggestionsToolbarLayout()
@@ -723,6 +968,7 @@ class MyKeyboardView @JvmOverloads constructor(
         }
 
         val isMainKeyboard = changedView == null || changedView.id != R.id.mini_keyboard_view
+        val customTypeface = FontHelper.getTypeface(context)
 
         // Photo/gradient theme: keep keys & text legible over the image with a light-on-dark scheme.
         if (mHasBackgroundImage && isMainKeyboard) {
@@ -780,6 +1026,8 @@ class MyKeyboardView @JvmOverloads constructor(
             }
 
             settingsCog.applyColorFilter(mTextColor)
+            phrasesButton.applyColorFilter(mTextColor)
+            helpButton.applyColorFilter(mTextColor)
             pinnedClipboardItems.applyColorFilter(mTextColor)
             clipboardClear.applyColorFilter(mTextColor)
             voiceInputButton.applyColorFilter(mTextColor)
@@ -796,6 +1044,56 @@ class MyKeyboardView @JvmOverloads constructor(
             clipboardManagerClose.applyColorFilter(mTextColor)
             clipboardManagerManage.applyColorFilter(mTextColor)
 
+            phrasesTopBar.background = ColorDrawable(mKeyboardBackgroundColor)
+            phrasesHolder.background = ColorDrawable(mBackgroundColor)
+            phrasesClose.applyColorFilter(mTextColor)
+            phrasesAdd.applyColorFilter(mTextColor)
+            phrasesSearch.setColors(mTextColor, mPrimaryColor, mBackgroundColor)
+            phrasesSearch.setHintTextColor(mTextColor.adjustAlpha(0.5f))
+
+            helpTopBar.background = ColorDrawable(mKeyboardBackgroundColor)
+            helpHolder.background = ColorDrawable(mBackgroundColor)
+            helpClose.applyColorFilter(mTextColor)
+            helpAdd.applyColorFilter(mTextColor)
+            helpSearch.setColors(mTextColor, mPrimaryColor, mBackgroundColor)
+            helpSearch.setHintTextColor(mTextColor.adjustAlpha(0.5f))
+
+            phrasesAddView.setBackgroundColor(mBackgroundColor)
+            phrasesAddInput.setColors(mTextColor, mPrimaryColor, mBackgroundColor)
+            phrasesAddInput.setHintTextColor(mTextColor.adjustAlpha(0.5f))
+            phrasesAddCancel.setTextColor(mTextColor)
+            phrasesAddSave.setTextColor(mPrimaryColor.getContrastColor())
+            phrasesAddSave.background.applyColorFilter(mPrimaryColor)
+
+            helpAddView.setBackgroundColor(mBackgroundColor)
+            helpAddConjunct.setColors(mTextColor, mPrimaryColor, mBackgroundColor)
+            helpAddConjunct.setHintTextColor(mTextColor.adjustAlpha(0.5f))
+            helpAddBreakdown.setColors(mTextColor, mPrimaryColor, mBackgroundColor)
+            helpAddBreakdown.setHintTextColor(mTextColor.adjustAlpha(0.5f))
+            helpAddCancel.setTextColor(mTextColor)
+            helpAddSave.setTextColor(mPrimaryColor.getContrastColor())
+            helpAddSave.background.applyColorFilter(mPrimaryColor)
+
+            calculatorTopBar.background = ColorDrawable(mKeyboardBackgroundColor)
+            calculatorHolder.background = ColorDrawable(mBackgroundColor)
+            calculatorClose.applyColorFilter(mTextColor)
+            calculatorLabel.setTextColor(mTextColor)
+            calculatorInput.setTextColor(mTextColor)
+            calculatorInput.setHintTextColor(mTextColor.adjustAlpha(0.5f))
+            calculatorResult.setTextColor(mTextColor)
+            calculatorInsert.setTextColor(mPrimaryColor.getContrastColor())
+            calculatorInsert.background.applyColorFilter(mPrimaryColor)
+
+            val calcBtns = listOf(
+                calc0, calc1, calc2, calc3, calc4, calc5, calc6, calc7, calc8, calc9,
+                calcDot, calcPlus, calcMinus, calcMultiply, calcDivide,
+                calcBracketOpen, calcBracketClose, calcClear
+            )
+            calcBtns.forEach {
+                it.setTextColor(mTextColor)
+                it.background.applyColorFilter(mKeyColor)
+            }
+
             clipboardManagerLabel.setTextColor(mTextColor)
             clipboardContentPlaceholder1.setTextColor(mTextColor)
             clipboardContentPlaceholder2.setTextColor(mTextColor)
@@ -810,21 +1108,33 @@ class MyKeyboardView @JvmOverloads constructor(
             speechBarMic.background.applyColorFilter(mPrimaryColor)
             speechBarMic.applyColorFilter(mPrimaryColor.getContrastColor())
 
+            speechBarSpace.typeface = customTypeface
+            speechBarSpace.setTextColor(mTextColor)
+            speechBarBackspace.applyColorFilter(mTextColor)
+            speechBarBottomBar.background = ColorDrawable(mKeyboardBackgroundColor)
+
             textEditingHolder.background = ColorDrawable(mBackgroundColor)
             textEditingTopBar.background = ColorDrawable(mKeyboardBackgroundColor)
             textEditingClose.applyColorFilter(mTextColor)
             textEditingLabel.setTextColor(mTextColor)
 
+            editSelectAll.typeface = customTypeface
             editSelectAll.setTextColor(mTextColor)
+            editCopy.typeface = customTypeface
             editCopy.setTextColor(mTextColor)
+            editCut.typeface = customTypeface
             editCut.setTextColor(mTextColor)
+            editPaste.typeface = customTypeface
             editPaste.setTextColor(mTextColor)
+            editSelect.typeface = customTypeface
             editSelect.setTextColor(mTextColor)
 
             editDpadUp.applyColorFilter(mTextColor)
             editDpadDown.applyColorFilter(mTextColor)
             editDpadLeft.applyColorFilter(mTextColor)
             editDpadRight.applyColorFilter(mTextColor)
+            editMoveHome.applyColorFilter(mTextColor)
+            editMoveEnd.applyColorFilter(mTextColor)
             editBackspace.applyColorFilter(mTextColor)
         }
 
@@ -842,6 +1152,130 @@ class MyKeyboardView @JvmOverloads constructor(
             ensureBackgroundThread { AvroParser.preload(context) }
         }
         setupStoredClips()
+        handleClipboard()
+    }
+
+    private fun setupToolbarReordering() {
+        val container = mToolbarButtonsContainer ?: return
+        val children = container.children.toList()
+
+        children.forEach { view ->
+            view.setOnLongClickListener {
+                // Show original toast if any
+                when (view.id) {
+                    R.id.voice_input_button -> context.toast(R.string.switch_to_voice_typing)
+                    R.id.settings_cog -> context.toast(R.string.settings)
+                    R.id.pinned_clipboard_items -> context.toast(R.string.clipboard)
+                    R.id.clipboard_clear -> context.toast(R.string.clear_clipboard_data)
+                    R.id.text_editing_button -> context.toast(R.string.text_editing)
+                    R.id.phrases_button -> context.toast(R.string.common_phrases)
+                    R.id.help_button -> context.toast(R.string.juktakkhor_help)
+                    R.id.calculator_button -> context.toast(R.string.calculator)
+                }
+
+                vibrateIfNeeded()
+                val data = ClipData.newPlainText("", "")
+                val shadow = DragShadowBuilder(view)
+                view.startDragAndDrop(data, shadow, view, 0)
+                view.beInvisible()
+                true
+            }
+        }
+
+        container.setOnDragListener { _, event ->
+            when (event.action) {
+                DragEvent.ACTION_DRAG_LOCATION -> {
+                    val draggedView = event.localState as View
+                    val x = event.x
+
+                    var targetIndex = -1
+                    for (i in 0 until container.childCount) {
+                        val child = container.getChildAt(i)
+                        if (x < child.x + child.width / 2) {
+                            targetIndex = i
+                            break
+                        }
+                    }
+                    if (targetIndex == -1) targetIndex = container.childCount
+
+                    val currentIndex = container.indexOfChild(draggedView)
+                    if (currentIndex != -1 && currentIndex != targetIndex) {
+                        container.removeView(draggedView)
+                        val insertAt = if (targetIndex > currentIndex) targetIndex - 1 else targetIndex
+                        container.addView(draggedView, insertAt.coerceIn(0, container.childCount))
+                    }
+                }
+
+                DragEvent.ACTION_DRAG_ENDED -> {
+                    val draggedView = event.localState as? View
+                    draggedView?.beVisible()
+                    saveToolbarOrder()
+                }
+            }
+            true
+        }
+    }
+
+    private fun saveToolbarOrder() {
+        val container = mToolbarButtonsContainer ?: return
+        val order = container.children.map { resources.getResourceEntryName(it.id) }.joinToString(",")
+        context.config.toolbarOrder = order
+    }
+
+    private fun loadToolbarOrder() {
+        val container = mToolbarButtonsContainer ?: return
+        val orderString = context.config.toolbarOrder
+        if (orderString.isEmpty()) return
+
+        val order = orderString.split(",")
+        val views = container.children.toList()
+        container.removeAllViews()
+
+        order.forEach { name ->
+            val id = resources.getIdentifier(name, "id", context.packageName)
+            if (id != 0) {
+                views.find { it.id == id }?.let {
+                    container.addView(it)
+                }
+            }
+        }
+
+        // Add any missing views
+        views.forEach { view ->
+            if (container.indexOfChild(view) == -1) {
+                container.addView(view)
+            }
+        }
+    }
+
+    private fun cycleToolbarSize() {
+        val currentHeight = mToolbarHolder?.layoutParams?.height ?: return
+        val baseHeight = resources.getDimensionPixelSize(R.dimen.toolbar_height)
+        val newHeight = when {
+            currentHeight < baseHeight * 1.2 -> (baseHeight * 1.5).toInt()
+            currentHeight < baseHeight * 1.7 -> (baseHeight * 2.0).toInt()
+            else -> baseHeight
+        }
+
+        updateToolbarSize(newHeight)
+    }
+
+    private fun updateToolbarSize(height: Int, save: Boolean = true) {
+        val holder = mToolbarHolder ?: return
+        holder.layoutParams.height = height
+        holder.requestLayout()
+
+        val iconSize = (height * 0.7).toInt()
+        mToolbarButtonsContainer?.children?.forEach {
+            it.layoutParams.width = iconSize
+            it.layoutParams.height = iconSize
+        }
+        keyboardViewBinding?.appsButton?.layoutParams?.width = iconSize
+        keyboardViewBinding?.appsButton?.layoutParams?.height = iconSize
+
+        if (save) {
+            context.config.toolbarHeight = height
+        }
     }
 
     fun vibrateIfNeeded() {
@@ -979,7 +1413,6 @@ class MyKeyboardView @JvmOverloads constructor(
         }
 
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-        handleClipboard()
 
         val keyCount = keys.size
         for (i in 0 until keyCount) {
@@ -1496,7 +1929,7 @@ class MyKeyboardView @JvmOverloads constructor(
             key.x, key.y,
             key.x + key.width, key.y + key.height
         )
-        onBufferDraw()
+        mDrawPending = true
         invalidate(
             key.x, key.y,
             key.x + key.width, key.y + key.height
@@ -1637,22 +2070,6 @@ class MyKeyboardView @JvmOverloads constructor(
     override fun onTouchEvent(me: MotionEvent): Boolean {
         val action = me.action
 
-        if (ignoreTouches) {
-            if (action == MotionEvent.ACTION_UP) {
-                ignoreTouches = false
-
-                // fix a glitch with long pressing backspace, then clicking some letter
-                if (mRepeatKeyIndex != NOT_A_KEY) {
-                    val key = mKeys.getOrNull(mRepeatKeyIndex)
-                    if (key?.code == KEYCODE_DELETE) {
-                        mHandler?.removeMessages(MSG_REPEAT)
-                        mRepeatKeyIndex = NOT_A_KEY
-                    }
-                }
-            }
-            return true
-        }
-
         // handle moving between alternative popup characters by swiping
         if (mPopupKeyboard.isShowing) {
             when (action) {
@@ -1741,27 +2158,33 @@ class MyKeyboardView @JvmOverloads constructor(
 
         when (action) {
             MotionEvent.ACTION_POINTER_DOWN -> {
-                // if the user presses a key while still holding down the previous, type in both chars and ignore the later gestures
-                // can happen at fast typing, easier to reproduce by increasing LONGPRESS_TIMEOUT
-                ignoreTouches = true
                 mHandler!!.removeMessages(MSG_LONGPRESS)
                 dismissPopupKeyboard()
-                detectAndSendKey(keyIndex, me.x.toInt(), me.y.toInt(), eventTime)
 
-                val newPointerX = me.getX(1).toInt()
-                val newPointerY = me.getY(1).toInt()
-                val secondKeyIndex = getPressedKeyIndex(newPointerX, newPointerY)
-                showPreview(secondKeyIndex)
-
-                detectAndSendKey(secondKeyIndex, newPointerX, newPointerY, eventTime)
-
-                val secondKeyCode = mKeys.getOrNull(secondKeyIndex)?.code
-                if (secondKeyCode != null) {
-                    mOnKeyboardActionListener!!.onPress(secondKeyCode)
+                // If there was a key being pressed by the first finger, send it now
+                if (mCurrentKey != NOT_A_KEY) {
+                    detectAndSendKey(mCurrentKey, mLastX, mLastY, eventTime)
+                    showPreview(NOT_A_KEY)
+                    setCurrentKeyPressed(false)
                 }
 
-                showPreview(NOT_A_KEY)
-                setCurrentKeyPressed(false)
+                val pointerIndex = me.actionIndex
+                val newPointerX = me.getX(pointerIndex).toInt()
+                val newPointerY = me.getY(pointerIndex).toInt()
+                val secondKeyIndex = getPressedKeyIndex(newPointerX, newPointerY)
+
+                mCurrentKey = secondKeyIndex
+                mLastX = newPointerX
+                mLastY = newPointerY
+                mDownTime = eventTime
+                mLastMoveTime = eventTime
+
+                val secondKeyCode = mKeys.getOrNull(secondKeyIndex)?.code ?: 0
+                mOnKeyboardActionListener!!.onPress(secondKeyCode)
+                mLastKeyPressedCode = secondKeyCode
+
+                showPreview(mCurrentKey)
+                setCurrentKeyPressed(true)
                 return true
             }
 
@@ -1956,9 +2379,14 @@ class MyKeyboardView @JvmOverloads constructor(
     }
 
     private fun repeatKey(): Boolean {
-        val key = mKeys[mRepeatKeyIndex]
-        if (key.code != KEYCODE_SPACE) {
-            detectAndSendKey(mCurrentKey, key.x, key.y, mLastTapTime)
+        if (mRepeatKeyIndex != NOT_A_KEY && mRepeatKeyIndex in mKeys.indices) {
+            val key = mKeys[mRepeatKeyIndex]
+            if (key.code != KEYCODE_SPACE) {
+                detectAndSendKey(mRepeatKeyIndex, key.x, key.y, mLastTapTime)
+            }
+        } else if (mCurrentKey == KEYCODE_DELETE) {
+            vibrateIfNeeded()
+            mOnKeyboardActionListener!!.onKey(KEYCODE_DELETE)
         }
         return true
     }
@@ -1980,6 +2408,7 @@ class MyKeyboardView @JvmOverloads constructor(
         keyboardViewBinding?.apply {
             clipboardManagerHolder.beVisible()
             clipboardSearch.setText("")
+            clipboardSearch.requestFocus()
             suggestionsHolder.hideAllInlineContentViews()
         }
         setupStoredClips()
@@ -2159,8 +2588,9 @@ class MyKeyboardView @JvmOverloads constructor(
             emojiPaletteTopBar.background = ColorDrawable(toolbarColor)
             emojiPaletteHolder.background = ColorDrawable(backgroundColor)
             emojiPaletteClose.applyColorFilter(textColor)
+            emojiPaletteLabel.beVisible()
             emojiPaletteLabel.setTextColor(textColor)
-            emojiSearch.setTextColor(textColor)
+            emojiSearch.setColors(textColor, mPrimaryColor, backgroundColor)
             emojiSearch.setHintTextColor(textColor.adjustAlpha(0.5f))
 
             emojiPaletteBottomBar.background = ColorDrawable(toolbarColor)
@@ -2210,10 +2640,11 @@ class MyKeyboardView @JvmOverloads constructor(
         keyboardViewBinding!!.suggestionsHolder.beGone()
         keyboardViewBinding!!.emojiSearch.setText("")
         keyboardViewBinding!!.emojiCategoriesStrip.beVisible()
+        keyboardViewBinding!!.emojiSearch.requestFocus()
         setupEmojis()
     }
 
-    private fun closeEmojiPalette() {
+    fun closeEmojiPalette() {
         keyboardViewBinding?.apply {
             emojiPaletteHolder.beGone()
             emojisList.scrollToPosition(0)
@@ -2251,6 +2682,7 @@ class MyKeyboardView @JvmOverloads constructor(
         emojiAdapterItems = items
         (keyboardViewBinding?.emojisList?.adapter as? EmojisAdapter)?.updateItems(items)
         keyboardViewBinding?.emojiCategoriesStrip?.beGoneIf(query.isNotBlank())
+        keyboardViewBinding?.emojiPaletteLabel?.beGoneIf(query.isNotBlank())
         keyboardViewBinding?.emojisList?.scrollToPosition(0)
     }
 
@@ -2426,6 +2858,190 @@ class MyKeyboardView @JvmOverloads constructor(
                     }
             }
         }
+    }
+
+    fun openPhrasesPanel() {
+        phraseSearchQuery = ""
+        keyboardViewBinding?.apply {
+            phrasesHolder.beVisible()
+            phrasesSearch.setText("")
+            phrasesSearch.requestFocus()
+            suggestionsHolder.beGone()
+            emojiPaletteHolder.beGone()
+            clipboardManagerHolder.beGone()
+            speechBarHolder.beGone()
+            textEditingHolder.beGone()
+            helpHolder.beGone()
+        }
+        setupPhrases()
+    }
+
+    fun closePhrasesPanel() {
+        keyboardViewBinding?.apply {
+            phrasesHolder.beGone()
+            suggestionsHolder.beVisible()
+        }
+    }
+
+    private fun setupPhrases() {
+        ensureBackgroundThread {
+            val query = phraseSearchQuery.trim().lowercase()
+            val customPhrases = context.phrasesDB.getPhrases().map { it.value }
+            val allPhrases = (PhrasesHelper.commonPhrases + customPhrases).distinct()
+            val filtered = if (query.isEmpty()) {
+                allPhrases
+            } else {
+                allPhrases.filter { it.contains(query) }
+            }
+
+            Handler(Looper.getMainLooper()).post {
+                val adapter = SimpleTextAdapter(context, filtered, mTextColor, mBackgroundColor, mStrokeColor) { text ->
+                    mOnKeyboardActionListener?.onText(text)
+                    vibrateIfNeeded()
+                }
+                keyboardViewBinding?.phrasesList?.adapter = adapter
+            }
+        }
+    }
+
+    private fun showAddPhraseDialog() {
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(50, 40, 50, 10)
+        }
+
+        val view = MyEditText(context).apply {
+            hint = context.getString(R.string.type_something)
+        }
+        container.addView(view)
+
+        context.getKeyboardDialogBuilder()
+            .setPositiveButton(R.string.ok) { _, _ ->
+                val text = view.text.toString().trim()
+                if (text.isNotEmpty()) {
+                    ensureBackgroundThread {
+                        context.phrasesDB.insertPhrase(Phrase(null, text))
+                        setupPhrases()
+                    }
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .let { builder ->
+                context.setupKeyboardDialogStuff(windowToken, container, builder, titleText = "Add New Phrase")
+            }
+    }
+
+    fun openHelpPanel() {
+        helpSearchQuery = ""
+        keyboardViewBinding?.apply {
+            helpHolder.beVisible()
+            helpSearch.setText("")
+            helpSearch.requestFocus()
+            suggestionsHolder.beGone()
+            emojiPaletteHolder.beGone()
+            clipboardManagerHolder.beGone()
+            speechBarHolder.beGone()
+            textEditingHolder.beGone()
+            phrasesHolder.beGone()
+        }
+        setupHelp()
+    }
+
+    fun closeHelpPanel() {
+        keyboardViewBinding?.apply {
+            helpHolder.beGone()
+            suggestionsHolder.beVisible()
+        }
+    }
+
+    private fun setupHelp() {
+        ensureBackgroundThread {
+            val query = helpSearchQuery.trim().lowercase()
+            val customJuktakkhor = context.phrasesDB.getJuktakkhor().map { it.conjunct to it.breakdown }
+            val allHelp = (PhrasesHelper.juktakkhorHelp + customJuktakkhor).distinctBy { it.first }
+            val filtered = if (query.isEmpty()) {
+                allHelp
+            } else {
+                allHelp.filter { it.first.contains(query) || it.second.contains(query) }
+            }
+
+            val strings = filtered.map { "${it.first} = ${it.second}" }
+            Handler(Looper.getMainLooper()).post {
+                val adapter = SimpleTextAdapter(context, strings, mTextColor, mBackgroundColor, mStrokeColor) { text ->
+                    val result = text.substringBefore("=").trim()
+                    mOnKeyboardActionListener?.onText(result)
+                    vibrateIfNeeded()
+                }
+                keyboardViewBinding?.helpList?.adapter = adapter
+            }
+        }
+    }
+
+    private fun showAddJuktakkhorDialog() {
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(50, 40, 50, 10)
+        }
+
+        val conjunctInput = MyEditText(context).apply { hint = "Conjunct (e.g. ক্ষ)" }
+        val breakdownInput = MyEditText(context).apply { 
+            hint = "Breakdown (e.g. ক + ষ)"
+            val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            lp.topMargin = 20
+            layoutParams = lp
+        }
+
+        container.addView(conjunctInput)
+        container.addView(breakdownInput)
+
+        context.getKeyboardDialogBuilder()
+            .setPositiveButton(R.string.ok) { _, _ ->
+                val conjunct = conjunctInput.text.toString().trim()
+                val breakdown = breakdownInput.text.toString().trim()
+                if (conjunct.isNotEmpty() && breakdown.isNotEmpty()) {
+                    ensureBackgroundThread {
+                        context.phrasesDB.insertJuktakkhor(Juktakkhor(null, conjunct, breakdown))
+                        setupHelp()
+                    }
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .let { builder ->
+                context.setupKeyboardDialogStuff(windowToken, container, builder, titleText = "Add New Juktakkhor")
+            }
+    }
+
+    fun openCalculatorPanel() {
+        keyboardViewBinding?.apply {
+            calculatorHolder.beVisible()
+            calculatorInput.setText("")
+            calculatorResult.text = ""
+            calculatorInput.requestFocus()
+            suggestionsHolder.beGone()
+            emojiPaletteHolder.beGone()
+            clipboardManagerHolder.beGone()
+            speechBarHolder.beGone()
+            textEditingHolder.beGone()
+            phrasesHolder.beGone()
+            helpHolder.beGone()
+        }
+    }
+
+    fun closeCalculatorPanel() {
+        keyboardViewBinding?.apply {
+            calculatorHolder.beGone()
+            suggestionsHolder.beVisible()
+        }
+    }
+
+    private fun updateCalculatorResult(expression: String) {
+        if (expression.isEmpty()) {
+            keyboardViewBinding?.calculatorResult?.text = ""
+            return
+        }
+
+        val result = MathHelper.tryEvaluateMath(expression)
+        keyboardViewBinding?.calculatorResult?.text = if (result != expression) "= $result" else ""
     }
 
     private fun closing() {

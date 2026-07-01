@@ -24,6 +24,7 @@ import com.itamadersomajinc.banglatype.extensions.getVoiceInputMethods
 import com.itamadersomajinc.banglatype.extensions.getVoiceInputRadioItems
 import com.itamadersomajinc.banglatype.extensions.selectedKeyboardTheme
 import com.itamadersomajinc.banglatype.helpers.KEYBOARD_THEME_CUSTOM_PHOTO
+import com.itamadersomajinc.banglatype.helpers.KEYBOARD_THEME_DEFAULT
 import com.itamadersomajinc.banglatype.helpers.KEYBOARD_HEIGHT_100_PERCENT
 import com.itamadersomajinc.banglatype.helpers.KEYBOARD_HEIGHT_120_PERCENT
 import com.itamadersomajinc.banglatype.helpers.KEYBOARD_HEIGHT_140_PERCENT
@@ -67,6 +68,8 @@ class SettingsActivity : SimpleActivity() {
 
         setupCustomizeColors()
         setupKeyboardTheme()
+        setupFont()
+        setupUseSystemColors()
         setupUseEnglish()
         setupLanguage()
         // setupManageClipboardItems() - Removed from this version of UI for now or handled differently
@@ -111,7 +114,8 @@ class SettingsActivity : SimpleActivity() {
 
             arrayOf(
                 settingsColorCustomizationIcon,
-                settingsKeyboardThemeIcon
+                settingsKeyboardThemeIcon,
+                settingsFontIcon
             ).forEach {
                 it.setColorFilter(getProperPrimaryColor())
             }
@@ -142,6 +146,50 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
+    private fun setupFont() {
+        binding.apply {
+            settingsFontValue.text = if (config.fontType == com.itamadersomajinc.banglatype.commons.helpers.FONT_TYPE_ASSET) {
+                config.fontName.substringAfterLast("/").substringBeforeLast(".")
+            } else {
+                getString(R.string.theme_default)
+            }
+
+            settingsFontHolder.setOnClickListener {
+                val fonts = com.itamadersomajinc.banglatype.commons.helpers.FontHelper.getAssetFonts(this@SettingsActivity)
+                val items = arrayListOf(RadioItem(com.itamadersomajinc.banglatype.commons.helpers.FONT_TYPE_SYSTEM_DEFAULT, getString(R.string.theme_default)))
+
+                fonts.forEachIndexed { index, font ->
+                    items.add(RadioItem(100 + index, font.substringAfterLast("/").substringBeforeLast("."), font))
+                }
+
+                val currentFontIndex = fonts.indexOf(config.fontName)
+                val checkedItemId = if (config.fontType == com.itamadersomajinc.banglatype.commons.helpers.FONT_TYPE_ASSET && currentFontIndex != -1) {
+                    100 + currentFontIndex
+                } else {
+                    com.itamadersomajinc.banglatype.commons.helpers.FONT_TYPE_SYSTEM_DEFAULT
+                }
+
+                RadioGroupDialog(
+                    activity = this@SettingsActivity,
+                    items = items,
+                    checkedItemId = checkedItemId
+                ) {
+                    val selectedValue = it
+                    if (selectedValue is Int && selectedValue == com.itamadersomajinc.banglatype.commons.helpers.FONT_TYPE_SYSTEM_DEFAULT) {
+                        config.fontType = com.itamadersomajinc.banglatype.commons.helpers.FONT_TYPE_SYSTEM_DEFAULT
+                        config.fontName = ""
+                        settingsFontValue.text = getString(R.string.theme_default)
+                    } else if (selectedValue is String) {
+                        config.fontType = com.itamadersomajinc.banglatype.commons.helpers.FONT_TYPE_ASSET
+                        config.fontName = selectedValue
+                        settingsFontValue.text = selectedValue.substringAfterLast("/").substringBeforeLast(".")
+                    }
+                    com.itamadersomajinc.banglatype.commons.helpers.FontHelper.clearCache()
+                }
+            }
+        }
+    }
+
     private fun setupKeyboardTheme() {
         binding.apply {
             settingsKeyboardThemeValue.text = when {
@@ -152,6 +200,21 @@ class SettingsActivity : SimpleActivity() {
                 Intent(this@SettingsActivity, KeyboardThemePickerActivity::class.java).apply {
                     startActivity(this)
                 }
+            }
+        }
+    }
+
+    private fun setupUseSystemColors() {
+        binding.apply {
+            settingsUseSystemColorsHolder.beVisibleIf(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+            settingsUseSystemColors.isChecked = config.isSystemThemeEnabled
+            settingsUseSystemColorsHolder.setOnClickListener {
+                settingsUseSystemColors.toggle()
+                config.isSystemThemeEnabled = settingsUseSystemColors.isChecked
+                if (config.isSystemThemeEnabled) {
+                    config.keyboardThemeId = KEYBOARD_THEME_DEFAULT
+                }
+                setupKeyboardTheme()
             }
         }
     }

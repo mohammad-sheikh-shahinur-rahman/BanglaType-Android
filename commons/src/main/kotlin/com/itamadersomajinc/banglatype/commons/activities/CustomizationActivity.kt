@@ -41,6 +41,7 @@ import com.itamadersomajinc.banglatype.commons.extensions.withGlobalConfig
 import com.itamadersomajinc.banglatype.commons.helpers.APP_ICON_IDS
 import com.itamadersomajinc.banglatype.commons.helpers.APP_LAUNCHER_NAME
 import com.itamadersomajinc.banglatype.commons.helpers.DARK_GREY
+import com.itamadersomajinc.banglatype.commons.helpers.FONT_TYPE_ASSET
 import com.itamadersomajinc.banglatype.commons.helpers.FONT_TYPE_CUSTOM
 import com.itamadersomajinc.banglatype.commons.helpers.FONT_TYPE_MONOSPACE
 import com.itamadersomajinc.banglatype.commons.helpers.FONT_TYPE_SYSTEM_DEFAULT
@@ -592,6 +593,7 @@ class CustomizationActivity : BaseSimpleActivity() {
         binding.customizationFont.text = when (curFontType) {
             FONT_TYPE_MONOSPACE -> getString(R.string.font_monospace)
             FONT_TYPE_CUSTOM -> curFontFileName.ifEmpty { getString(R.string.select_font_file) }
+            FONT_TYPE_ASSET -> curFontFileName.substringAfterLast('/').substringBeforeLast('.')
             else -> getString(R.string.system_default)
         }
     }
@@ -600,6 +602,7 @@ class CustomizationActivity : BaseSimpleActivity() {
         val items = arrayListOf(
             RadioItem(FONT_TYPE_SYSTEM_DEFAULT, getString(R.string.system_default)),
             RadioItem(FONT_TYPE_MONOSPACE, getString(R.string.font_monospace)),
+            RadioItem(FONT_TYPE_ASSET, "Select from app fonts"),
             RadioItem(FONT_TYPE_CUSTOM, getString(R.string.select_font_file))
         )
 
@@ -614,11 +617,31 @@ class CustomizationActivity : BaseSimpleActivity() {
                     return@RadioGroupDialog
                 }
                 openFontFilePicker()
+            } else if (selectedType == FONT_TYPE_ASSET) {
+                openAssetFontPicker()
             } else {
                 curFontType = selectedType
                 curFontFileName = ""
                 fontChanged()
             }
+        }
+    }
+
+    private fun openAssetFontPicker() {
+        val fonts = FontHelper.getAssetFonts(this)
+        if (fonts.isEmpty()) {
+            toast("No fonts found in assets")
+            return
+        }
+
+        val items = fonts.mapIndexed { index, path ->
+            RadioItem(index, path.substringAfterLast('/').substringBeforeLast('.'))
+        } as ArrayList<RadioItem>
+
+        RadioGroupDialog(this, items, -1, titleId = R.string.select_font_file) { index ->
+            curFontType = FONT_TYPE_ASSET
+            curFontFileName = fonts[index as Int]
+            fontChanged()
         }
     }
 

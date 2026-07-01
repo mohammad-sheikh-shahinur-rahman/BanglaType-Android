@@ -187,6 +187,77 @@
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginHorizontal="20dp"
+                        android:background="#0D000000" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/settings_font_holder"
+                        style="@style/SettingsHolderTextViewStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/ripple_background"
+                        android:padding="20dp">
+
+                        <ImageView
+                            android:id="@+id/settings_font_icon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_text_editing_vector"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:tint="@color/brand_blue" />
+
+                        <com.itamadersomajinc.banglatype.commons.views.MyTextView
+                            android:id="@+id/settings_font_label"
+                            style="@style/SettingsTextLabelStyle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:text="@string/font"
+                            android:textStyle="bold"
+                            app:layout_constraintStart_toEndOf="@id/settings_font_icon"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <com.itamadersomajinc.banglatype.commons.views.MyTextView
+                            android:id="@+id/settings_font_value"
+                            style="@style/SettingsTextValueStyle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            app:layout_constraintStart_toStartOf="@id/settings_font_label"
+                            app:layout_constraintTop_toBottomOf="@+id/settings_font_label"
+                            tools:text="Default" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <View
+                        android:id="@+id/settings_use_system_colors_divider"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginHorizontal="20dp"
+                        android:background="#0D000000" />
+
+                    <RelativeLayout
+                        android:id="@+id/settings_use_system_colors_holder"
+                        style="@style/SettingsHolderSwitchStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/ripple_background"
+                        android:padding="20dp">
+
+                        <com.itamadersomajinc.banglatype.commons.views.MyMaterialSwitch
+                            android:id="@+id/settings_use_system_colors"
+                            style="@style/SettingsSwitchStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/use_system_colors"
+                            android:textStyle="bold" />
+
+                    </RelativeLayout>
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
